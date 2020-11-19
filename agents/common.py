@@ -131,6 +131,28 @@ def apply_player_action(
     return mod_board
 
 
+def get_non_full_columns(board: np.ndarray) -> Tuple[PlayerAction]:
+    """
+    Receives a board and return the indices of playable columns.
+
+    Parameters
+    ----------
+    board : np.ndarray
+        Current board
+
+    Returns
+    -------
+    actions : Tuple[PlayerAction]
+        Playable moves on board
+
+    """
+    cpy_board = board.copy()
+    cpy_board[cpy_board != NO_PLAYER] = PLAYER1
+
+    actions = np.where(cpy_board.sum(axis=0) < 6)[0].astype(PlayerAction)
+    return tuple(actions)
+
+
 def connected_four(
         board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None,
 ) -> bool:

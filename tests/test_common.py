@@ -1,4 +1,5 @@
-from agents.common import *
+from agents.common import ROWS, COLUMNS, BoardPiece, NO_PLAYER, PLAYER2, PLAYER1, initialize_game_state, PlayerAction
+from typing import Tuple
 import numpy as np
 
 
@@ -12,6 +13,8 @@ def test_initialize_game_state():
 
 
 def test_pretty_print_board():
+    from agents.common import pretty_print_board
+
     board = initialize_game_state()
     board[0, 1] = PLAYER2
     board[1, 1] = PLAYER2
@@ -44,6 +47,8 @@ def test_pretty_print_board():
 
 
 def test_string_to_board():
+    from agents.common import string_to_board
+
     input_board = "|==============|\n" \
                   "|              |\n" \
                   "|              |\n" \
@@ -77,6 +82,8 @@ def test_string_to_board():
 
 
 def test_apply_player_action():
+    from agents.common import apply_player_action
+
     cmp_board = initialize_game_state()
     cmp_board[0, 0] = PLAYER2
     cmp_board[0, 1] = PLAYER1
@@ -108,7 +115,51 @@ def test_apply_player_action():
     assert not np.allclose(board, copy_board)
 
 
+def test_get_non_full_columns():
+    from agents.common import string_to_board, get_non_full_columns
+
+    board = initialize_game_state()
+    assert isinstance(get_non_full_columns(board), Tuple)
+    assert isinstance(get_non_full_columns(board)[0], PlayerAction)
+    assert get_non_full_columns(board) == (0, 1, 2, 3, 4, 5, 6)
+
+    board2 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|    X X       |\n" \
+             "|    O X X     |\n" \
+             "|  O X O O     |\n" \
+             "|  O O X X     |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    assert get_non_full_columns(string_to_board(board2)) == (0, 1, 2, 3, 4, 5, 6)
+
+    board3 = "|==============|\n" \
+             "|    X         |\n" \
+             "|    O O       |\n" \
+             "|    X X       |\n" \
+             "|    O X X     |\n" \
+             "|  O X O O     |\n" \
+             "|  O O X X     |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    assert get_non_full_columns(string_to_board(board3)) == (0, 1, 3, 4, 5, 6)
+
+    board_draw = "|==============|\n" \
+                 "|O O O X O O O |\n" \
+                 "|X X X O X X X |\n" \
+                 "|O O X X X O X |\n" \
+                 "|X X O O X X O |\n" \
+                 "|O O X X O O X |\n" \
+                 "|O O X X O X O |\n" \
+                 "|==============|\n" \
+                 "|0 1 2 3 4 5 6 |"
+    assert get_non_full_columns(string_to_board(board_draw)) == ()
+
+
 def test_connected_four():
+    from agents.common import string_to_board, connected_four
+
     board1 = "|==============|\n" \
              "|              |\n" \
              "|              |\n" \
@@ -197,6 +248,8 @@ def test_connected_four():
 
 
 def test_check_end_state():
+    from agents.common import string_to_board, GameState, check_end_state
+
     board1 = "|==============|\n" \
              "|              |\n" \
              "|              |\n" \
