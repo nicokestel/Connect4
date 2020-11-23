@@ -53,6 +53,57 @@ def minimax(
         ???
 
     """
+
+    """
+    Minimax pseudocode:
+    
+    function minimax(board, depth, isMaxPlayer)
+        if depth=0 or terminal node
+            return score(board)
+        
+        if isMaxPlayer=TRUE
+            value := -INF
+            for each child
+                value := max(value, minimax(child, depth-1, FALSE)
+            return value
+         else 
+            value := INF
+            for each child
+                value := min(value, minimax(child, depth-1, TRUE)
+            return value
+    
+    """
+
+    """
+        Minimax + AlphaBeta-Pruning pseudocode:
+
+        function minimax(board, depth, a, b, isMaxPlayer)
+            if depth=0 or terminal node
+                return score(board)
+
+            if isMaxPlayer=TRUE
+                value := a
+                
+                for each child
+                    value := max(value, minimax(child, depth-1, value, b, FALSE)
+                    
+                    if value >= b   BETA-CUTOFF
+                        break
+                        
+                return value
+                
+             else 
+                value := b
+                
+                for each child
+                    value := min(value, minimax(child, depth-1, a, value, TRUE)
+                    
+                    if value <= a   ALPHA-CUTOFF
+                        break
+                        
+                return value
+
+        """
     pass
 
 
@@ -73,4 +124,6 @@ def score(board: np.ndarray, player: BoardPiece) -> np.int32:
         Heuristic score of board from player's perspective
 
     """
+
+    # should respect GameState.IS_DRAW with return value 0
     pass
