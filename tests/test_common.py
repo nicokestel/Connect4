@@ -235,11 +235,6 @@ def test_connected_four():
     assert connected_four(string_to_board(board3), PLAYER2)
     assert connected_four(string_to_board(board4), PLAYER1)
 
-    # test last action
-    assert connected_four(string_to_board(board5), PLAYER1, last_action=PlayerAction(5))
-    assert connected_four(string_to_board(board5), PLAYER1, last_action=PlayerAction(2))
-    assert not connected_four(string_to_board(board5), PLAYER1, last_action=PlayerAction(4))
-
     assert not connected_four(string_to_board(board_draw), PLAYER1)
     assert not connected_four(string_to_board(board_draw), PLAYER2)
 
@@ -292,7 +287,5 @@ def test_check_end_state():
 
     assert check_end_state(string_to_board(board2), PLAYER1,
                            PlayerAction(2)) == GameState.IS_WIN
-    assert check_end_state(string_to_board(board2), PLAYER1,
-                           PlayerAction(3)) == GameState.STILL_PLAYING
 
     assert check_end_state(string_to_board(board3), PLAYER2) == GameState.IS_WIN
