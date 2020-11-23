@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Optional
 from typing import Callable, Tuple
 import numpy as np
+from scipy.signal import convolve2d
 
 COLUMNS = np.int8(7)  # number of columns on board
 ROWS = np.int(6)  # number of rows on board
@@ -153,6 +154,14 @@ def get_non_full_columns(board: np.ndarray) -> Tuple[PlayerAction]:
     return tuple(actions)
 
 
+# kernels for connected_four function
+CONNECT_N = 4
+col_kernel = np.ones((CONNECT_N, 1), dtype=BoardPiece)
+row_kernel = np.ones((1, CONNECT_N), dtype=BoardPiece)
+dia_l_kernel = np.diag(np.ones(CONNECT_N, dtype=BoardPiece))
+dia_r_kernel = np.array(np.diag(np.ones(CONNECT_N, dtype=BoardPiece))[::-1, :])
+
+
 def connected_four(
         board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None,
 ) -> bool:
@@ -166,81 +175,10 @@ def connected_four(
     masked_board = (board == player).astype(BoardPiece)
     # print('\n', masked_board)
 
-    if last_action:
-        x0 = last_action
-        y0 = board[:, last_action].argmin() - 1  # highest entry with piece
-
-        # horizontal
-        for j in range(COLUMNS - 3):
-            if masked_board[y0, j] and masked_board[y0, j + 1] and masked_board[y0, j + 2] and masked_board[y0, j + 3]:
-                return True
-
-        # vertical
-        for i in range(ROWS - 3):
-            if masked_board[i, x0] and masked_board[i + 1, x0] and masked_board[i + 2, x0] and masked_board[i + 3, x0]:
-                return True
-
-        # check diagonals with count walker
-        # walk along diagonals until non-player piece occurs
-        directions = [(-1, -1), (-1, 1)]  # one for each diagonal
-        for y_step, x_step in directions:
-            count = 0
-            xi = x0
-            yi = y0
-            while xi in range(0, COLUMNS) and yi in range(0, ROWS):
-                if masked_board[yi, xi]:
-                    yi += y_step
-                    xi += x_step
-                    count += 1
-                else:
-                    yi += y_step
-                    xi += x_step
-                    continue
-
-                if count >= 4:
-                    return True
-
-            yi = y0 - y_step
-            xi = x0 - x_step
-            while xi in range(0, COLUMNS) and yi in range(0, ROWS):
-                if masked_board[yi, xi]:
-                    count += 1
-                else:
-                    break
-
-                yi -= y_step
-                xi -= x_step
-
-                if count >= 4:
-                    return True
-        return False
-
-    else:
-        # horizontal
-        for i in range(ROWS):
-            for j in range(COLUMNS - 3):
-                if masked_board[i, j] and masked_board[i, j + 1] and masked_board[i, j + 2] and masked_board[i, j + 3]:
-                    return True
-
-        # vertical
-        for j in range(COLUMNS):
-            for i in range(ROWS - 3):
-                if masked_board[i, j] and masked_board[i + 1, j] and masked_board[i + 2, j] and masked_board[i + 3, j]:
-                    return True
-
-        # / diagonals
-        for i in range(ROWS - 3):
-            for j in range(3, COLUMNS):
-                if masked_board[i, j] and masked_board[i + 1, j - 1] and masked_board[i + 2, j - 2] \
-                        and masked_board[i + 3, j - 3]:
-                    return True
-
-        # \ diagonals
-        for i in range(3, ROWS):
-            for j in range(3, COLUMNS):
-                if masked_board[i, j] and masked_board[i - 1, j - 1] and masked_board[i - 2, j - 2] \
-                        and masked_board[i - 3, j - 3]:
-                    return True
+    for kernel in (col_kernel, row_kernel, dia_l_kernel, dia_r_kernel):
+        result = convolve2d(masked_board, kernel, mode='full')
+        if np.any(result == CONNECT_N):
+            return True
 
     return False
 
