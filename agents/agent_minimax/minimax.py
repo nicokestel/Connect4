@@ -127,6 +127,8 @@ def score(board: np.ndarray, player: BoardPiece) -> np.int32:
 
     # should respect GameState.IS_DRAW with return value 0
     # should respect GameState.IS_WIN with very high/low values
+    # e.g.  np.iinfo(np.int32).max
+    #       np.iinfo(np.int32).min
 
     # for 'normal' situation consider evaluating the board from
     # both perspectives and returning the difference.
