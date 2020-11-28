@@ -159,7 +159,7 @@ CONNECT_N = 4
 col_kernel = np.ones((CONNECT_N, 1), dtype=BoardPiece)
 row_kernel = np.ones((1, CONNECT_N), dtype=BoardPiece)
 dia_l_kernel = np.diag(np.ones(CONNECT_N, dtype=BoardPiece))
-dia_r_kernel = np.array(np.diag(np.ones(CONNECT_N, dtype=BoardPiece))[::-1, :])
+dia_r_kernel = np.fliplr(dia_l_kernel)
 
 
 def connected_four(
