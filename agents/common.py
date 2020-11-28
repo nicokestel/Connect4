@@ -5,7 +5,7 @@ import numpy as np
 from scipy.signal import convolve2d
 
 COLUMNS = np.int8(7)  # number of columns on board
-ROWS = np.int(6)  # number of rows on board
+ROWS = np.int8(6)  # number of rows on board
 
 BoardPiece = np.int8  # The data type (dtype) of the board
 NO_PLAYER = BoardPiece(0)  # board[i, j] == NO_PLAYER where the position is empty
