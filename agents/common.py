@@ -147,10 +147,8 @@ def get_non_full_columns(board: np.ndarray) -> Tuple[PlayerAction]:
         Playable moves on board
 
     """
-    cpy_board = board.copy()
-    cpy_board[cpy_board != NO_PLAYER] = PLAYER1
 
-    actions = np.where(cpy_board.sum(axis=0) < 6)[0].astype(PlayerAction)
+    actions = np.where(board[-1, :] == NO_PLAYER)[0].astype(PlayerAction)
     return tuple(actions)
 
 
@@ -175,7 +173,7 @@ def connected_four(
     masked_board = (board == player).astype(BoardPiece)
     # print('\n', masked_board)
 
-    for kernel in (col_kernel, row_kernel, dia_l_kernel, dia_r_kernel):
+    for kernel in (dia_l_kernel, dia_r_kernel, row_kernel, col_kernel):
         result = convolve2d(masked_board, kernel, mode='full')
         if np.any(result == CONNECT_N):
             return True
