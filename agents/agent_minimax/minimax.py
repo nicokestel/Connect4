@@ -1,6 +1,9 @@
-import numpy as np
-from ..common import BoardPiece, SavedState, PlayerAction
 from typing import Tuple, Optional
+
+import numpy as np
+
+from ..common import BoardPiece, SavedState, PlayerAction, check_end_state, GameState, PLAYER1, get_non_full_columns, \
+    apply_player_action, PLAYER2
 
 
 def generate_move_minimax(
@@ -30,8 +33,10 @@ def generate_move_minimax(
 
 def minimax(
         board: np.ndarray, player: BoardPiece, depth: np.int8, saved_state: Optional[SavedState]
-) -> Tuple[PlayerAction, Optional[SavedState]]:
+) -> Tuple[PlayerAction, np.int32, Optional[SavedState]]:
     """
+    Executes Minimax Algorithm from player's perspective by predicting depth next turns starting with board.
+    Returns best column to play.
 
     Parameters
     ----------
@@ -49,6 +54,8 @@ def minimax(
     -------
     action : PlayerAction
         The generated move as index of column that is to be played
+    value : np.int32
+        Value of generated move
     saved_state : Optional[SavedState]
         ???
 
@@ -66,45 +73,168 @@ def minimax(
             for each child
                 value := max(value, minimax(child, depth-1, FALSE)
             return value
-         else 
+        else 
             value := INF
             for each child
                 value := min(value, minimax(child, depth-1, TRUE)
             return value
     
     """
+    if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
+        return score(board=board, player=player)
+
+    if player == PLAYER1:  # maximizing
+        value = np.iinfo(np.int32).min
+        best_move = None
+        for move in get_non_full_columns(board=board):
+            new_value = minimax(board=apply_player_action(board=board,
+                                                          action=move,
+                                                          player=player,
+                                                          copy=True),  # 'simulate' move
+                                player=PLAYER2,  # minimizing player
+                                depth=depth - 1,
+                                saved_state=saved_state)
+
+            if new_value > value:
+                best_move = move
+                value = new_value
+
+        return best_move, value, saved_state
+
+    else:  # PLAYER2 minimizing
+        value = np.iinfo(np.int32).max
+        best_move = None
+        for move in get_non_full_columns(board=board):
+            new_value = minimax(board=apply_player_action(board=board,
+                                                          action=move,
+                                                          player=player,
+                                                          copy=True),  # 'simulate' move
+                                player=PLAYER1,  # maximizing player
+                                depth=depth - 1,
+                                saved_state=saved_state)
+
+            if new_value < value:
+                best_move = move
+                value = new_value
+
+        return best_move, value, saved_state
+
+
+def minimax_ab(
+        board: np.ndarray, player: BoardPiece, depth: np.int8, a: np.int32, b: np.int32,
+        saved_state: Optional[SavedState]
+) -> Tuple[PlayerAction, np.int32, Optional[SavedState]]:
+    """
+    Executes Minimax Algorithm with alphabeta-pruning from player's perspective by predicting depth next turns
+    starting with board.
+    Returns best column to play.
+
+    Parameters
+    ----------
+    board: np.ndarray
+        Current game state
+    player: BoardPiece
+        The player that needs to play a move
+    depth: np.int8
+        Depth counter to indicate how many turns are left to predict (stopping at 0)
+    a: np.int32
+        Alpha value used for alpha-cutoffs
+    b: np.int32
+        Beta value used for beta-cutoffs
+    saved_state: Optional[SavedState]
+        ???
+
+
+    Returns
+    -------
+    action : PlayerAction
+        The generated move as index of column that is to be played
+    value : np.int32
+        Value of generated move
+    saved_state : Optional[SavedState]
+        ???
 
     """
-        Minimax + AlphaBeta-Pruning pseudocode:
 
-        function minimax(board, depth, a, b, isMaxPlayer)
-            if depth=0 or terminal node
-                return score(board)
+    """
+    Minimax + AlphaBeta-Pruning pseudocode:
 
-            if isMaxPlayer=TRUE
-                value := a
-                
-                for each child
-                    value := max(value, minimax(child, depth-1, value, b, FALSE)
-                    
-                    if value >= b   BETA-CUTOFF
-                        break
-                        
-                return value
-                
-             else 
-                value := b
-                
-                for each child
-                    value := min(value, minimax(child, depth-1, a, value, TRUE)
-                    
-                    if value <= a   ALPHA-CUTOFF
-                        break
-                        
-                return value
+    function minimax(board, depth, a, b, isMaxPlayer)
+        if depth=0 or terminal node
+            return score(board)
 
-        """
-    pass
+        if isMaxPlayer=TRUE
+            value := a
+
+            for each child
+                value := max(value, minimax(child, depth-1, value, b, FALSE)
+
+                if value >= b   BETA-CUTOFF
+                    break
+
+            return value
+
+        else 
+            value := b
+
+            for each child
+                value := min(value, minimax(child, depth-1, a, value, TRUE)
+
+                if value <= a   ALPHA-CUTOFF
+                    break
+
+            return value
+
+    """
+
+    if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
+        return score(board=board, player=player)
+
+    if player == PLAYER1:  # maximizing
+        value = a
+        best_move = None
+        for move in get_non_full_columns(board=board):
+            new_value = minimax_ab(board=apply_player_action(board=board,
+                                                             action=move,
+                                                             player=player,
+                                                             copy=True),  # 'simulate' move
+                                   player=PLAYER2,  # minimizing player
+                                   depth=depth - 1,
+                                   a=value,
+                                   b=b,
+                                   saved_state=saved_state)
+
+            if new_value > value:
+                best_move = move
+                value = new_value
+
+            if value >= b:  # BETA-cutoff
+                break
+
+        return best_move, value, saved_state
+
+    else:  # PLAYER2 minimizing
+        value = b
+        best_move = None
+        for move in get_non_full_columns(board=board):
+            new_value = minimax_ab(board=apply_player_action(board=board,
+                                                             action=move,
+                                                             player=player,
+                                                             copy=True),  # 'simulate' move
+                                   player=PLAYER1,  # maximizing player
+                                   depth=depth - 1,
+                                   a=a,
+                                   b=value,
+                                   saved_state=saved_state)
+
+            if new_value < value:
+                best_move = move
+                value = new_value
+
+            if value <= a:  # ALPHA-cutoff
+                break
+
+        return best_move, value, saved_state
 
 
 def score(board: np.ndarray, player: BoardPiece) -> np.int32:
