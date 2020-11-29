@@ -1,5 +1,5 @@
 import numpy as np
-from ..common import BoardPiece, SavedState, PlayerAction
+from ..common import BoardPiece, SavedState, PlayerAction, PLAYER1, PLAYER2, check_end_state, GameState
 from typing import Tuple, Optional
 
 
@@ -124,6 +124,18 @@ def score(board: np.ndarray, player: BoardPiece) -> np.int32:
         Heuristic score of board from player's perspective
 
     """
-
     # should respect GameState.IS_DRAW with return value 0
-    pass
+    if check_end_state(board, player) == GameState.IS_DRAW:
+        return np.int32(0)
+
+    score_matrix = np.array([[3, 4, 5, 7, 5, 4, 3],
+                            [4, 6, 8, 10, 8, 6, 4],
+                            [5, 8, 11, 13, 11, 8, 5],
+                            [5, 8, 11, 13, 11, 8, 5],
+                            [4, 6, 8, 10, 8, 6, 4],
+                            [3, 4, 5, 7, 5, 4, 3]], dtype=np.int32)
+
+    masked_board = (board == PLAYER1).astype(np.int32)
+    res = np.sum(np.multiply(masked_board, score_matrix))
+    return res
+
