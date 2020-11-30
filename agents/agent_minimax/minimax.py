@@ -4,10 +4,12 @@ from ..common import BoardPiece, SavedState, PlayerAction, PLAYER1, PLAYER2, che
 from typing import Tuple, Optional
 
 Depth = np.int8  # data type of depth integer
+MIN_VALUE = np.iinfo(np.int32).min
+MAX_VALUE = np.iinfo(np.int32).max
 
 
 def generate_move_minimax(
-        board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]
+        board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState], use_ab_pruning: bool = True
 ) -> Tuple[PlayerAction, Optional[SavedState]]:
     """
 
@@ -19,6 +21,8 @@ def generate_move_minimax(
         The player that needs to play a move
     saved_state : Optional[SavedState]
         ???
+    use_ab_pruning: bool
+        Flag that indicates if alphabeta-pruning should be used
 
     Returns
     -------
@@ -28,7 +32,11 @@ def generate_move_minimax(
         ???
 
     """
-    pass
+
+    if use_ab_pruning:
+        return tuple(np.array(minimax_ab(board=board, player=player, depth=Depth(4), saved_state=saved_state))[[0, 2]])
+
+    return tuple(np.array(minimax(board=board, player=player, depth=Depth(4), saved_state=saved_state))[[0, 2]])
 
 
 def minimax(
@@ -121,8 +129,8 @@ def minimax(
 
 
 def minimax_ab(
-        board: np.ndarray, player: BoardPiece, depth: np.int8, a: np.int32, b: np.int32,
-        saved_state: Optional[SavedState]
+        board: np.ndarray, player: BoardPiece, depth: np.int8, saved_state: Optional[SavedState],
+        a: np.int32 = MIN_VALUE, b: np.int32 = MAX_VALUE
 ) -> Tuple[PlayerAction, np.int32, Optional[SavedState]]:
     """
     Executes Minimax Algorithm with alphabeta-pruning from player's perspective by predicting depth next turns
@@ -237,6 +245,14 @@ def minimax_ab(
         return best_move, value, saved_state
 
 
+score_matrix = np.array([[3, 4, 5, 7, 5, 4, 3],
+                         [4, 6, 8, 10, 8, 6, 4],
+                         [5, 8, 11, 13, 11, 8, 5],
+                         [5, 8, 11, 13, 11, 8, 5],
+                         [4, 6, 8, 10, 8, 6, 4],
+                         [3, 4, 5, 7, 5, 4, 3]], dtype=np.int32)
+
+
 def score(board: np.ndarray, player: BoardPiece) -> np.int32:
     """
     Scores a board from a player's perspective using a heuristic.
@@ -266,13 +282,6 @@ def score(board: np.ndarray, player: BoardPiece) -> np.int32:
     # for the current player
     if check_end_state(board, player) == GameState.IS_DRAW:
         return np.int32(0)
-
-    score_matrix = np.array([[3, 4,  5,  7,  5, 4, 3],
-                             [4, 6,  8, 10,  8, 6, 4],
-                             [5, 8, 11, 13, 11, 8, 5],
-                             [5, 8, 11, 13, 11, 8, 5],
-                             [4, 6,  8, 10,  8, 6, 4],
-                             [3, 4,  5,  7,  5, 4, 3]], dtype=np.int32)
 
     masked_board = (board == PLAYER1).astype(np.int32)
     res = np.multiply(masked_board, score_matrix).sum()
