@@ -22,6 +22,8 @@ def generate_move_minimax(
         The player that needs to play a move
     saved_state : Optional[SavedState]
         ???
+    depth: Depth
+        Indicates up to which depth moves should be predicted. (default = 4)
     use_ab_pruning: bool
         Flag that indicates if alphabeta-pruning should be used
 
