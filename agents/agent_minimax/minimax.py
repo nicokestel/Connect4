@@ -9,7 +9,8 @@ MAX_VALUE = np.iinfo(np.int32).max
 
 
 def generate_move_minimax(
-        board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState], use_ab_pruning: bool = True
+        board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState], depth: Depth = Depth(4),
+        use_ab_pruning: bool = True
 ) -> Tuple[PlayerAction, Optional[SavedState]]:
     """
 
@@ -34,9 +35,9 @@ def generate_move_minimax(
     """
 
     if use_ab_pruning:
-        return tuple(np.array(minimax_ab(board=board, player=player, depth=Depth(4), saved_state=saved_state))[[0, 2]])
+        return tuple(np.array(minimax_ab(board=board, player=player, depth=depth, saved_state=saved_state))[[0, 2]])
 
-    return tuple(np.array(minimax(board=board, player=player, depth=Depth(4), saved_state=saved_state))[[0, 2]])
+    return tuple(np.array(minimax(board=board, player=player, depth=depth, saved_state=saved_state))[[0, 2]])
 
 
 def minimax(
@@ -93,8 +94,9 @@ def minimax(
 
     if player == PLAYER1:  # maximizing
         value = np.iinfo(np.int32).min
-        best_move = None
-        for move in get_non_full_columns(board=board):
+        moves = get_non_full_columns(board=board)
+        best_move = moves[0]
+        for move in moves:
             (_, new_value, _) = minimax(board=apply_player_action(board=board,
                                                                   action=move,
                                                                   player=player,
@@ -111,8 +113,9 @@ def minimax(
 
     else:  # PLAYER2 minimizing
         value = np.iinfo(np.int32).max
-        best_move = None
-        for move in get_non_full_columns(board=board):
+        moves = get_non_full_columns(board=board)
+        best_move = moves[0]
+        for move in moves:
             (_, new_value, _) = minimax(board=apply_player_action(board=board,
                                                                   action=move,
                                                                   player=player,
@@ -200,8 +203,9 @@ def minimax_ab(
 
     if player == PLAYER1:  # maximizing
         value = a
-        best_move = None
-        for move in get_non_full_columns(board=board):
+        moves = get_non_full_columns(board=board)
+        best_move = moves[0]
+        for move in moves:
             (_, new_value, _) = minimax_ab(board=apply_player_action(board=board,
                                                                      action=move,
                                                                      player=player,
@@ -223,8 +227,9 @@ def minimax_ab(
 
     else:  # PLAYER2 minimizing
         value = b
-        best_move = None
-        for move in get_non_full_columns(board=board):
+        moves = get_non_full_columns(board=board)
+        best_move = moves[0]
+        for move in moves:
             (_, new_value, _) = minimax_ab(board=apply_player_action(board=board,
                                                                      action=move,
                                                                      player=player,
