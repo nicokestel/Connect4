@@ -275,14 +275,27 @@ def score(board: np.ndarray, player: BoardPiece) -> np.int32:
     # e.g.  np.iinfo(np.int32).max
     #       np.iinfo(np.int32).min
 
-    # for 'normal' situation consider evaluating the board from
-    # both perspectives and returning the difference.
+    if player == PLAYER1:
+        opponent = PLAYER2
+    else:
+        opponent = PLAYER1
 
-    # A larger difference is equivalent to a bigger advantage
-    # for the current player
     if check_end_state(board, player) == GameState.IS_DRAW:
         return np.int32(0)
 
-    masked_board = (board == PLAYER1).astype(np.int32)
-    res = np.multiply(masked_board, score_matrix).sum()
-    return res
+    if check_end_state(board, player) == GameState.IS_WIN:
+        return MAX_VALUE
+
+    if check_end_state(board, opponent) == GameState.IS_WIN:
+        return MIN_VALUE
+
+    # for 'normal' situation consider evaluating the board from
+    # both perspectives and returning the difference.
+    # A larger difference is equivalent to a bigger advantage
+    # for the current player
+
+    player_score = np.multiply((board == player).astype(np.int32), score_matrix).sum()
+    opponent_score = np.multiply((board == opponent).astype(np.int32), score_matrix).sum()
+
+    return player_score - opponent_score
+
