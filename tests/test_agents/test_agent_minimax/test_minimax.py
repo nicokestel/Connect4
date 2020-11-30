@@ -48,7 +48,7 @@ def test_minimax():
 
 
 def test_score():
-    from agents.agent_minimax.minimax import score
+    from agents.agent_minimax.minimax import score, MAX_VALUE, MIN_VALUE
     from agents.common import string_to_board, PLAYER1, PLAYER2
     board = "|==============|\n" \
             "|              |\n" \
@@ -70,10 +70,26 @@ def test_score():
                  "|==============|\n" \
                  "|0 1 2 3 4 5 6 |"
 
+    board2 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|    X X       |\n" \
+             "|    X X X     |\n" \
+             "|  O X O O     |\n" \
+             "|  O X X X     |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+
     # not sure if PLAYER1 or PLAYER2 is winning, but should not indicate a draw
-    assert score(board=string_to_board(board), player=PLAYER1) != 0
-    assert score(board=string_to_board(board), player=PLAYER2) != 0
+    assert score(board=string_to_board(board), player=PLAYER1) > 0
+    assert score(board=string_to_board(board), player=PLAYER2) < 0
 
     # test for draw
     assert score(board=string_to_board(board_draw), player=PLAYER1) == 0
     assert score(board=string_to_board(board_draw), player=PLAYER2) == 0
+
+    # test a win situation for player
+    assert score(board=string_to_board(board2), player=PLAYER1) == MAX_VALUE
+
+    # test a loss situation for player
+    assert score(board=string_to_board(board2), player=PLAYER2) == MIN_VALUE
