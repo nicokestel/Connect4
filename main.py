@@ -2,7 +2,8 @@ import numpy as np
 from typing import Optional, Callable
 from agents.common import PlayerAction, BoardPiece, SavedState, GenMove
 
-from agents.agent_random import generate_move
+#from agents.agent_random import generate_move
+from agents.agent_minimax import generate_move
 
 
 def user_move(board: np.ndarray, _player: BoardPiece, saved_state: Optional[SavedState]):
@@ -70,4 +71,4 @@ def human_vs_agent(
 
 if __name__ == "__main__":
     # human_vs_agent(user_move)
-    human_vs_agent(generate_move)
+    human_vs_agent(generate_move, generate_move, args_1=tuple({4}), args_2=tuple({4}))
