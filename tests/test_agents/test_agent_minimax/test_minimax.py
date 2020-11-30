@@ -1,9 +1,6 @@
 def test_minimax():
-    from agents.agent_minimax.minimax import minimax, minimax_ab, Depth
+    from agents.agent_minimax.minimax import minimax, minimax_ab, Depth, MIN_VALUE, MAX_VALUE
     from agents.common import initialize_game_state, string_to_board, PLAYER1, PLAYER2, PlayerAction
-    import numpy as np
-
-    MIN_VALUE, MAX_VALUE = np.iinfo(np.int32).min, np.iinfo(np.int32).max
 
     board_init = initialize_game_state()
 
