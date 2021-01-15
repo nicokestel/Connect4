@@ -1,2 +1,4 @@
 .idea/
 .DS_Store
+/profiling/mmab
+/agents/agent_mlp/mlp_training/.ipynb_checkpoints/MLP_agent_training-checkpoint.ipynb
