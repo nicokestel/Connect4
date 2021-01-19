@@ -41,10 +41,10 @@ def test_minimax():
                0] == PlayerAction(3)
 
     # PLAYER1 wins in 2 turns (actually)
-    assert minimax(board=string_to_board(board), player=PLAYER1, depth=Depth(4), saved_state=None)[0] == PlayerAction(3)
+    assert minimax(board=string_to_board(board), player=PLAYER1, depth=Depth(4), saved_state=None)[0] == PlayerAction(2)
     assert minimax_ab(board=string_to_board(board), player=PLAYER1, depth=Depth(4), a=MIN_VALUE, b=MAX_VALUE,
                       saved_state=None)[
-               0] == PlayerAction(3)
+               0] == PlayerAction(2)
 
 
 def test_score():
@@ -59,6 +59,8 @@ def test_score():
             "|  O O X X     |\n" \
             "|==============|\n" \
             "|0 1 2 3 4 5 6 |"
+
+    board_flip = board.replace('X', 'T').replace('O', 'X').replace('T', 'O')  # flip Xs and Os
 
     board_draw = "|==============|\n" \
                  "|O O O X O O O |\n" \
@@ -81,15 +83,16 @@ def test_score():
              "|0 1 2 3 4 5 6 |"
 
     # not sure if PLAYER1 or PLAYER2 is winning, but should not indicate a draw
-    assert score(board=string_to_board(board), player=PLAYER1) > 0
-    assert score(board=string_to_board(board), player=PLAYER2) < 0
+    assert score(board=string_to_board(board)) == 24
+    assert score(board=string_to_board(board_flip)) == -24
 
     # test for draw
-    assert score(board=string_to_board(board_draw), player=PLAYER1) == 0
-    assert score(board=string_to_board(board_draw), player=PLAYER2) == 0
+    assert score(board=string_to_board(board_draw)) == 0
+    assert score(board=string_to_board(board_draw)) == 0
 
-    # test a win situation for player
-    assert score(board=string_to_board(board2), player=PLAYER1) == MAX_VALUE
+    # test a win situation for player1
+    assert score(board=string_to_board(board2)) == MAX_VALUE
 
-    # test a loss situation for player
-    assert score(board=string_to_board(board2), player=PLAYER2) == MIN_VALUE
+    # test a win situation for player2
+    board2_flip = board2.replace('X', 'T').replace('O', 'X').replace('T', 'O')  # flip Xs and Os
+    assert score(board=string_to_board(board2_flip)) == MIN_VALUE

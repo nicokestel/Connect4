@@ -74,7 +74,7 @@ def minimax(
     """
 
     if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
-        return PlayerAction(0), score(board=board, player=player), saved_state
+        return PlayerAction(0), score(board=board), saved_state
 
     if player == PLAYER1:  # maximizing
         value = np.iinfo(np.int32).min
@@ -152,7 +152,7 @@ def minimax_ab(
     """
 
     if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
-        return PlayerAction(0), score(board=board, player=player), saved_state
+        return PlayerAction(0), score(board=board), saved_state
 
     if player == PLAYER1:  # maximizing
         value = a
@@ -211,46 +211,39 @@ score_matrix = np.array([[3, 4, 5, 7, 5, 4, 3],
                          [3, 4, 5, 7, 5, 4, 3]], dtype=np.int32)
 
 
-def score(board: np.ndarray, player: BoardPiece) -> np.int32:
+def score(board: np.ndarray) -> np.int32:
     """
-    Scores a board from a player's perspective using a heuristic.
+    Scores a board using simple heuristic scoring.
 
     Parameters
     ----------
     board: np.ndarray
         Current game state
-    player: BoardPiece
-        The player's perspective from which to score the board
 
     Returns
     -------
     score: np.int32
-        Heuristic score of board from player's perspective
-
-        Equals difference to opponent's score.
-        Edge cases: WON=INF, DEFEAT=-INF, DRAW=0
+        Heuristic score of board
+        score = 0 := draw
+        score > 0 := advantage for PLAYER1
+        score < 0 := advantage for PLAYER2
+        score = INF := PLAYER1 won
+        score = -INF := PLAYER2 won
 
     """
 
-    if player == PLAYER1:
-        opponent = PLAYER2
-    else:
-        opponent = PLAYER1
-
     # check edge cases
-    player_game_state = check_end_state(board, player)
-
-    if player_game_state == GameState.IS_DRAW:
+    if check_end_state(board, PLAYER1) == GameState.IS_DRAW:
         return DRAW_VALUE
 
-    if player_game_state == GameState.IS_WIN:
+    if check_end_state(board, PLAYER1) == GameState.IS_WIN:
         return MAX_VALUE
 
-    if check_end_state(board, opponent) == GameState.IS_WIN:
+    if check_end_state(board, PLAYER2) == GameState.IS_WIN:
         return MIN_VALUE
 
     # ongoing game
-    player_score = np.multiply((board == player).astype(np.int32), score_matrix).sum()
-    opponent_score = np.multiply((board == opponent).astype(np.int32), score_matrix).sum()
+    player1_score = np.multiply((board == PLAYER1).astype(np.int32), score_matrix).sum()
+    player2_score = np.multiply((board == PLAYER2).astype(np.int32), score_matrix).sum()
 
-    return player_score - opponent_score
+    return player1_score - player2_score
