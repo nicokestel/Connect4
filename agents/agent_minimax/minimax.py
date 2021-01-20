@@ -6,6 +6,7 @@ from typing import Tuple, Optional
 Depth = np.int8  # data type of depth integer
 MIN_VALUE = np.iinfo(np.int32).min
 MAX_VALUE = np.iinfo(np.int32).max
+DRAW_VALUE = np.int32(0)
 
 
 def generate_move_minimax(
@@ -72,27 +73,8 @@ def minimax(
 
     """
 
-    """
-    Minimax pseudocode:
-
-    function minimax(board, depth, isMaxPlayer)
-        if depth=0 or terminal node
-            return score(board)
-
-        if isMaxPlayer=TRUE
-            value := -INF
-            for each child
-                value := max(value, minimax(child, depth-1, FALSE)
-            return value
-        else 
-            value := INF
-            for each child
-                value := min(value, minimax(child, depth-1, TRUE)
-            return value
-
-    """
     if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
-        return PlayerAction(0), score(board=board, player=player), saved_state
+        return PlayerAction(0), score(board=board), saved_state
 
     if player == PLAYER1:  # maximizing
         value = np.iinfo(np.int32).min
@@ -169,39 +151,8 @@ def minimax_ab(
 
     """
 
-    """
-    Minimax + AlphaBeta-Pruning pseudocode:
-
-    function minimax(board, depth, a, b, isMaxPlayer)
-        if depth=0 or terminal node
-            return score(board)
-
-        if isMaxPlayer=TRUE
-            value := a
-
-            for each child
-                value := max(value, minimax(child, depth-1, value, b, FALSE)
-
-                if value >= b   BETA-CUTOFF
-                    break
-
-            return value
-
-        else 
-            value := b
-
-            for each child
-                value := min(value, minimax(child, depth-1, a, value, TRUE)
-
-                if value <= a   ALPHA-CUTOFF
-                    break
-
-            return value
-
-    """
-
     if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
-        return PlayerAction(0), score(board=board, player=player), saved_state
+        return PlayerAction(0), score(board=board), saved_state
 
     if player == PLAYER1:  # maximizing
         value = a
@@ -260,49 +211,39 @@ score_matrix = np.array([[3, 4, 5, 7, 5, 4, 3],
                          [3, 4, 5, 7, 5, 4, 3]], dtype=np.int32)
 
 
-def score(board: np.ndarray, player: BoardPiece) -> np.int32:
+def score(board: np.ndarray) -> np.int32:
     """
-    Scores a board from a player's perspective using a heuristic.
+    Scores a board using simple heuristic scoring.
 
     Parameters
     ----------
     board: np.ndarray
         Current game state
-    player: BoardPiece
-        The player's perspective from which to score the board
 
     Returns
     -------
     score: np.int32
-        Heuristic score of board from player's perspective
+        Heuristic score of board
+        score = 0 := draw
+        score > 0 := advantage for PLAYER1
+        score < 0 := advantage for PLAYER2
+        score = INF := PLAYER1 won
+        score = -INF := PLAYER2 won
 
     """
-    # should respect GameState.IS_DRAW with return value 0
-    # should respect GameState.IS_WIN with very high/low values
-    # e.g.  np.iinfo(np.int32).max
-    #       np.iinfo(np.int32).min
 
-    if player == PLAYER1:
-        opponent = PLAYER2
-    else:
-        opponent = PLAYER1
+    # check edge cases
+    if check_end_state(board, PLAYER1) == GameState.IS_DRAW:
+        return DRAW_VALUE
 
-    if check_end_state(board, player) == GameState.IS_DRAW:
-        return np.int32(0)
-
-    if check_end_state(board, player) == GameState.IS_WIN:
+    if check_end_state(board, PLAYER1) == GameState.IS_WIN:
         return MAX_VALUE
 
-    if check_end_state(board, opponent) == GameState.IS_WIN:
+    if check_end_state(board, PLAYER2) == GameState.IS_WIN:
         return MIN_VALUE
 
-    # for 'normal' situation consider evaluating the board from
-    # both perspectives and returning the difference.
-    # A larger difference is equivalent to a bigger advantage
-    # for the current player
+    # ongoing game
+    player1_score = np.multiply((board == PLAYER1).astype(np.int32), score_matrix).sum()
+    player2_score = np.multiply((board == PLAYER2).astype(np.int32), score_matrix).sum()
 
-    player_score = np.multiply((board == player).astype(np.int32), score_matrix).sum()
-    opponent_score = np.multiply((board == opponent).astype(np.int32), score_matrix).sum()
-
-    return player_score - opponent_score
-
+    return player1_score - player2_score
