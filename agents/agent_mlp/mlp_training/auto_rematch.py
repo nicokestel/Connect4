@@ -38,14 +38,10 @@ def auto_rematch(
         Winner's moves
     """
     players = (PLAYER1, PLAYER2)
-    board_player1 = []
-    board_player2 = []
-    moves1 = []
-    moves2 = []
-    num_boards_1 = 0
-    num_boards_2 = 0
-    num_moves_1 = 0
-    num_moves_2 = 0
+    boards_player_1 = []
+    boards_player_2 = []
+    moves_player_1 = []
+    moves_player_2 = []
     for play_first in (1, -1):
 
         saved_state = {PLAYER1: None, PLAYER2: None}
@@ -59,10 +55,7 @@ def auto_rematch(
             for player, player_name, gen_move, args in zip(
                     players, player_names, gen_moves, gen_args,
             ):
-                print(pretty_print_board(board))
-                print(
-                    f'{player_name} you are playing with {"X" if player == PLAYER1 else "O"}'
-                )
+
                 action, saved_state[player] = gen_move(
                     board.copy(), player, saved_state[player], *args
                 )
@@ -70,52 +63,26 @@ def auto_rematch(
 
                 # save board and player actions
                 if player is PLAYER1:
-                    moves1.append(action)
-                    board_player1.append(board)
-                    num_boards_1 += 1
-                    num_moves_1 += 1
+                    moves_player_1.append(action)
+                    boards_player_1.append(board)
                 else:
-                    moves2.append(action)
-                    board_player2.append(board)
-                    num_boards_2 += 1
-                    num_moves_2 += 1
+                    moves_player_2.append(action)
+                    boards_player_2.append(board)
 
                 end_state = check_end_state(board, player)
                 if end_state != GameState.STILL_PLAYING:
-                    print(pretty_print_board(board))
                     if end_state == GameState.IS_DRAW:
                         # TODO: what should be returned in case of a draw?
-                        # return last player's moves if a draw occurs
+                        # temporary solution: return last player's moves if a draw occurs
                         if player is PLAYER1:
-                            print("Game ended in draw")
-                            print("n_boards_1: ", num_boards_1)
-                            print("n_boards_2: ", num_boards_2)
-                            print("n_moves_1: ", num_moves_1)
-                            print("n_moves_2: ", num_moves_2)
-                            return board_player1, moves1
+                            return boards_player_1, moves_player_1
                         else:
-                            print("Game ended in draw")
-                            print("n_boards_1: ", num_boards_1)
-                            print("n_boards_2: ", num_boards_2)
-                            print("n_moves_1: ", num_moves_1)
-                            print("n_moves_2: ", num_moves_2)
-                            return board_player1, moves2
+                            return boards_player_1, moves_player_2
                     else:
                         # game ended with 'player' as winner
-                        print(
-                            f'{player_name} won playing {"X" if player == PLAYER1 else "O"}'
-                        )
                         if player is PLAYER1:
-                            print("n_boards_1: ", num_boards_1)
-                            print("n_boards_2: ", num_boards_2)
-                            print("n_moves_1: ", num_moves_1)
-                            print("n_moves_2: ", num_moves_2)
-                            return board_player1, moves1
+                            return boards_player_1, moves_player_1
                         else:
-                            print("n_boards_1: ", num_boards_1)
-                            print("n_boards_2: ", num_boards_2)
-                            print("n_moves_1: ", num_moves_1)
-                            print("n_moves_2: ", num_moves_2)
-                            return board_player2, moves2
+                            return boards_player_2, moves_player_2
                     playing = False
                     break
