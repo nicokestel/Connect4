@@ -25,7 +25,7 @@ def auto_rematch(
     player_1 : str
         Name of first agent
     player_2 : str
-        Name of seconde agent
+        Name of second agent
     args_1 : Tuple
         Arguments for generate_move_1
     args_2 : Tuple
