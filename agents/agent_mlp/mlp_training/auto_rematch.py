@@ -42,6 +42,7 @@ def auto_rematch(
         Winner's moves
     """
 
+    # boards and moves that get returned after n_matches matches
     boards = list()
     moves = list()
 
@@ -55,6 +56,7 @@ def auto_rematch(
             player_names = (player_1, player_2)[::play_first]
             gen_args = (args_1, args_2)[::play_first]
 
+            # initialize tmp boards and moves lists
             player_boards = {PLAYER1: list(), PLAYER2: list()}
             player_moves = {PLAYER1: list(), PLAYER2: list()}
 
@@ -67,10 +69,12 @@ def auto_rematch(
                         board.copy(), player, saved_state[player], *args
                     )
 
-                    # store tmp boards and moves
+                    # replace own pieces with 1 and opponent's pieces with -1
                     tmp_board = board.copy()
                     tmp_board[tmp_board == (PLAYER2 if player == PLAYER1 else PLAYER1)] = -1
                     tmp_board[tmp_board == player] = 1
+
+                    # store tmp boards and moves
                     player_boards[player].append(tmp_board.flatten().astype(np.int8))
                     player_moves[player].append(action)
 
