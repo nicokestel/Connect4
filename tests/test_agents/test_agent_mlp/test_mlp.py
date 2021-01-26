@@ -10,6 +10,9 @@ def test_auto_rematch():
     assert type(boards) == list and type(moves) == list
     assert len(boards) != 0 and len(moves) != 0
     assert len(boards) == len(moves)
+    for board in boards:
+        for elem in board:
+            assert elem in [-1, 1, 0]
 
     # print for debugging
     #for board in boards:
