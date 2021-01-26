@@ -47,7 +47,7 @@ def auto_rematch(
     moves = list()
 
     for n in range(n_matches):
-        print('starting match', n+1)
+        # print('starting match', n+1)
         players = (PLAYER1, PLAYER2)
         for play_first in (1, -1):
             saved_state = {PLAYER1: None, PLAYER2: None}
