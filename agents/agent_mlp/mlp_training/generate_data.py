@@ -22,3 +22,19 @@ def save_data(data: List[np.ndarray], labels: List[np.int8], filename: str = 'C4
     """
     scipy.io.savemat(filename, {'data': data, 'labels': labels})
     return len(labels)
+
+
+if __name__ == '__main__':
+    from agents.agent_mlp.mlp_training.auto_rematch import auto_rematch
+    from agents.agent_minimax import generate_move as mm_move
+    from agents.agent_random import generate_move as random_move
+
+    boards_mm, moves_mm = auto_rematch(random_move, mm_move, args_2=tuple({4}), n_matches=50)
+    boards_ra, moves_ra = auto_rematch(random_move, random_move, n_matches=500)
+
+    boards_mm.extend(boards_ra)
+    moves_mm.extend(moves_ra)
+
+    entries = save_data(boards_mm, moves_mm)
+
+    print(entries)
