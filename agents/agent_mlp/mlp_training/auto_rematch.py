@@ -5,6 +5,43 @@ from typing import Tuple, List
 import numpy as np
 
 
+def convert_arrays(boards: list, moves: list, player: int) -> (List, List):
+    """
+    Parameters
+    ----------
+    boards : list
+        List of boards as numpy arrays
+    moves: list
+        List of moves as integers
+    player: int
+        Player from whose perspective the board is converted
+
+    Returns
+    -------
+    converted: list
+        List of boards with player pieces replaced with 1
+        and opponent pieces replaced with -1
+    converted_moves: list
+        List of moves as np.int8 integers
+    """
+    res = []
+    res_moves = []
+    if player is PLAYER1:
+        opponent = PLAYER2
+    else:
+        opponent = PLAYER1
+
+    for board in boards:
+        board = np.where(board == player, 1, board)
+        board = np.where(board == opponent, -1, board)
+        board = np.ndarray.flatten(board)
+        board.astype('int8')
+        res.append(board)
+    for move in moves:
+        res_moves.append(np.int8(move))
+    return res, res_moves
+
+
 def auto_rematch(
         generate_move_1: GenMove,
         generate_move_2: GenMove,
@@ -75,14 +112,18 @@ def auto_rematch(
                         # TODO: what should be returned in case of a draw?
                         # temporary solution: return last player's moves if a draw occurs
                         if player is PLAYER1:
-                            return boards_player_1, moves_player_1
+                            boards, moves = convert_arrays(boards_player_1, moves_player_1, player)
+                            return boards, moves
                         else:
-                            return boards_player_1, moves_player_2
+                            boards, moves = convert_arrays(boards_player_2, moves_player_2, player)
+                            return boards, moves
                     else:
                         # game ended with 'player' as winner
                         if player is PLAYER1:
-                            return boards_player_1, moves_player_1
+                            boards, moves = convert_arrays(boards_player_1, moves_player_1, player)
+                            return boards, moves
                         else:
-                            return boards_player_2, moves_player_2
+                            boards, moves = convert_arrays(boards_player_2, moves_player_2, player)
+                            return boards, moves
                     playing = False
                     break
