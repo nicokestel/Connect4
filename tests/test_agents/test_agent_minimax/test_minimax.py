@@ -96,3 +96,20 @@ def test_score():
     # test a win situation for player2
     board2_flip = board2.replace('X', 'T').replace('O', 'X').replace('T', 'O')  # flip Xs and Os
     assert score(board=string_to_board(board2_flip)) == MIN_VALUE
+
+
+def test_sort_moves():
+    from agents.agent_minimax.minimax import sort_moves
+    from agents.common import PlayerAction
+
+    moves1 = (0, 1, 2, 3, 4, 5, 6)
+    assert sort_moves(moves1) == (3, 2, 4, 1, 5, 0, 6)
+
+    moves2 = (2, 3, 4, 6)
+    assert sort_moves(moves2) == (3, 2, 4, 6)
+
+    assert type(sort_moves(moves2)) == tuple
+    assert type(sort_moves(moves2)[0]) == PlayerAction
+
+    moves3 = (0, 1, 2, 4, 5, 6)
+    assert sort_moves(moves3) == (2, 4, 1, 5, 0, 6)

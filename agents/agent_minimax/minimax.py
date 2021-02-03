@@ -78,7 +78,7 @@ def minimax(
 
     if player == PLAYER1:  # maximizing
         value = np.iinfo(np.int32).min
-        moves = get_non_full_columns(board=board)
+        moves = sort_moves(get_non_full_columns(board=board))
         best_move = moves[0]
         for move in moves:
             (_, new_value, _) = minimax(board=apply_player_action(board=board,
@@ -180,7 +180,7 @@ def minimax_ab(
 
     else:  # PLAYER2 minimizing
         value = b
-        moves = get_non_full_columns(board=board)
+        moves = sort_moves(get_non_full_columns(board=board))
         best_move = moves[0]
         for move in moves:
             (_, new_value, _) = minimax_ab(board=apply_player_action(board=board,
@@ -247,3 +247,23 @@ def score(board: np.ndarray) -> np.int32:
     player2_score = np.multiply((board == PLAYER2).astype(np.int32), score_matrix).sum()
 
     return player1_score - player2_score
+
+
+def sort_moves(moves: Tuple[PlayerAction]) -> Tuple[PlayerAction]:
+    """
+    Sorts moves according to distance to middle column (ascending).
+
+    Parameters
+    ----------
+    moves : Tuple[PlayerAction]
+        Moves in ascending order
+    Returns
+    -------
+    moves : Tuple[PlayerAction]
+        Sorted moves
+    """
+    m = np.array(moves)
+    diff = abs(m - 3)
+    idx = np.argsort(diff)
+
+    return tuple(m[idx].astype(PlayerAction))
