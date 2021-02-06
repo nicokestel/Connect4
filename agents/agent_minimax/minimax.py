@@ -232,6 +232,13 @@ def score(board: np.ndarray) -> np.int32:
 
     """
 
+    if check_end_state(board, PLAYER1) == GameState.STILL_PLAYING:
+        # ongoing game
+        player1_score = np.multiply((board == PLAYER1).astype(np.int32), score_matrix).sum()
+        player2_score = np.multiply((board == PLAYER2).astype(np.int32), score_matrix).sum()
+
+        return player1_score - player2_score
+
     # check edge cases
     if check_end_state(board, PLAYER1) == GameState.IS_DRAW:
         return DRAW_VALUE
@@ -242,11 +249,7 @@ def score(board: np.ndarray) -> np.int32:
     if check_end_state(board, PLAYER2) == GameState.IS_WIN:
         return MIN_VALUE
 
-    # ongoing game
-    player1_score = np.multiply((board == PLAYER1).astype(np.int32), score_matrix).sum()
-    player2_score = np.multiply((board == PLAYER2).astype(np.int32), score_matrix).sum()
-
-    return player1_score - player2_score
+    return 0
 
 
 def sort_moves(moves: Tuple[PlayerAction]) -> Tuple[PlayerAction]:
