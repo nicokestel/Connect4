@@ -160,15 +160,16 @@ dia_l_kernel = np.diag(np.ones(CONNECT_N, dtype=BoardPiece))
 dia_r_kernel = np.fliplr(dia_l_kernel)
 
 
+"""
 def connected_four(
         board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None,
 ) -> bool:
-    """
+    
     Returns True if there are four adjacent pieces equal to `player` arranged
     in either a horizontal, vertical, or diagonal line. Returns False otherwise.
     If desired, the last action taken (i.e. last column played) can be provided
     for potential speed optimisation.
-    """
+    
 
     masked_board = (board == player).astype(BoardPiece)
     # print('\n', masked_board)
@@ -179,7 +180,43 @@ def connected_four(
             return True
 
     return False
+"""
 
+disable_jit = False
+if disable_jit:
+    import os
+
+    os.environ['NUMBA_DISABLE_JIT'] = '1'
+
+from numba import njit
+
+@njit()
+def connected_four(
+        board: np.ndarray, player: BoardPiece, _last_action: Optional[PlayerAction] = None
+) -> bool:
+    rows, cols = board.shape
+    rows_edge = rows - CONNECT_N + 1
+    cols_edge = cols - CONNECT_N + 1
+
+    for i in range(rows):
+        for j in range(cols_edge):
+            if np.all(board[i, j:j + CONNECT_N] == player):
+                return True
+
+    for i in range(rows_edge):
+        for j in range(cols):
+            if np.all(board[i:i + CONNECT_N, j] == player):
+                return True
+
+    for i in range(rows_edge):
+        for j in range(cols_edge):
+            block = board[i:i + CONNECT_N, j:j + CONNECT_N]
+            if np.all(np.diag(block) == player):
+                return True
+            if np.all(np.diag(block[::-1, :]) == player):
+                return True
+
+    return False
 
 def check_end_state(
         board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None,
