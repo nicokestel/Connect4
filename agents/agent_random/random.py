@@ -40,6 +40,6 @@ def generate_move_random(
     p *= available
     p /= sum(p)
 
-    action = np.random.choice(np.arange(0, 7), p=p)
+    action = np.random.choice(np.arange(0, 7), p=p).astype(PlayerAction)
 
     return action, saved_state
