@@ -113,3 +113,150 @@ def test_sort_moves():
 
     moves3 = (0, 1, 2, 4, 5, 6)
     assert sort_moves(moves3) == (2, 4, 1, 5, 0, 6)
+
+
+from agents.agent_minimax.minimax import feature_score, MAX_VALUE, MIN_VALUE
+from agents.common import string_to_board, pretty_print_board, PLAYER1, PLAYER2
+import numpy as np
+
+
+def test_feature_score_1():
+    # feature 1 - certain win
+    board1 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|    X X     X |\n" \
+             "|    O X X X O |\n" \
+             "|  O X O X O O |\n" \
+             "|  O O X X O O |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    board1_flip = board1.replace('X', 'T').replace('O', 'X').replace('T', 'O')
+    b1 = string_to_board(board1)
+    assert feature_score(board=b1) == MAX_VALUE
+    b1_flip = string_to_board(board1_flip)
+    assert feature_score(board=b1_flip) == MIN_VALUE
+
+
+def test_feature_score_2():
+    # feature 2 - two spaces available to win in one move
+    board2 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|      O       |\n" \
+             "|O   X X X   O |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    b2 = string_to_board(board2)
+    assert feature_score(board=b2) == MAX_VALUE
+    board2_flip = board2.replace('X', 'T').replace('O', 'X').replace('T', 'O')
+    b2_flip = string_to_board(board2_flip)
+    assert feature_score(board=b2_flip) == MIN_VALUE
+
+    # feature 2 - one space available to win in one move
+    board3 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|O   O         |\n" \
+             "|X X X       O |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    board32 = "|==============|\n" \
+              "|              |\n" \
+              "|              |\n" \
+              "|              |\n" \
+              "|            O |\n" \
+              "|X           O |\n" \
+              "|X         X O |\n" \
+              "|==============|\n" \
+              "|0 1 2 3 4 5 6 |"
+    board3 = string_to_board(board3)
+    board32 = string_to_board(board32)
+    assert feature_score(board=board3) == 900000
+    assert feature_score(board=board32) == -900000
+
+
+def test_feature_score_3():
+    # feature 3
+    board7 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|O             |\n" \
+             "|X             |\n" \
+             "|O X           |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    board7 = string_to_board(board7)
+    assert feature_score(board=board7) == 40000
+
+
+    board8 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|X             |\n" \
+             "|O O X         |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    board8 = string_to_board(board8)
+    assert feature_score(board=board8) == 30000
+
+
+    board9 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|O X X       O |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    board9 = string_to_board(board9)
+    assert feature_score(board=board9) == 20000
+
+    board10 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|O X X     O   |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    board10 = string_to_board(board10)
+    assert feature_score(board=board10) == 10000
+
+
+def test_feature_score_special():
+    board5 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|  X X X O     |\n" \
+             "|  O O O X     |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    board5 = string_to_board(board5)
+    assert feature_score(board=board5) == 0
+
+    board6 = "|==============|\n" \
+             "|              |\n" \
+             "|              |\n" \
+             "|        X     |\n" \
+             "|        X     |\n" \
+             "|    X   O   O |\n" \
+             "|O X O X O X O |\n" \
+             "|==============|\n" \
+             "|0 1 2 3 4 5 6 |"
+    b6 = string_to_board(board6)
+    assert feature_score(board=b6) == 900000
+    board6_lr = pretty_print_board(np.fliplr(string_to_board(board6)))
+    b6_lr = string_to_board(board6_lr)
+    assert feature_score(board=b6_lr) == 900000
