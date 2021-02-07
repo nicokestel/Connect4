@@ -2,6 +2,8 @@ import numpy as np
 from ..common import BoardPiece, SavedState, PlayerAction, PLAYER1, PLAYER2, check_end_state, GameState, \
     get_non_full_columns, apply_player_action
 from typing import Tuple, Optional
+from scipy.signal import convolve2d
+import re
 
 Depth = np.int8  # data type of depth integer
 MIN_VALUE = np.iinfo(np.int32).min
@@ -267,3 +269,45 @@ def sort_moves(moves: Tuple[PlayerAction]) -> Tuple[PlayerAction]:
     idx = np.argsort(diff)
 
     return tuple(m[idx].astype(PlayerAction))
+
+
+def feature_score(board: np.ndarray) -> np.int32:
+    """
+    Scores a board by looking for features.
+
+    Parameters
+    ----------
+    board: np.ndarray
+        Current game state
+
+    Returns
+    -------
+    score: np.int32
+        Heuristic feature score of board
+        score = 0 := draw
+        score > 0 := advantage for PLAYER1
+        score < 0 := advantage for PLAYER2
+        score = INF := PLAYER1 won
+        score = -INF := PLAYER2 won
+
+    """
+
+    # check edge cases
+    if check_end_state(board, PLAYER1) == GameState.IS_DRAW:
+        return DRAW_VALUE
+
+    if check_end_state(board, PLAYER1) == GameState.IS_WIN:
+        return MAX_VALUE
+
+    if check_end_state(board, PLAYER2) == GameState.IS_WIN:
+        return MIN_VALUE
+
+    player1_board = np.where(board == 2, -1, board)
+    feature21 = np.array([[0, 1, 1, 1, 0]]).astype(BoardPiece)
+    res = convolve2d(player1_board, feature21, mode='full')
+    if np.any(res == 3):
+        return MAX_VALUE
+    elif np.any(res == -3):
+        return MIN_VALUE
+
+    return -1
