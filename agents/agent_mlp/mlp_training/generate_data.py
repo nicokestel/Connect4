@@ -28,13 +28,10 @@ if __name__ == '__main__':
     from agents.agent_mlp.mlp_training.auto_rematch import auto_rematch
     from agents.agent_minimax import generate_move as mm_move
     from agents.agent_random import generate_move as random_move
+    from agents.agent_mlp import generate_move as mlp_move
 
-    boards_mm, moves_mm = auto_rematch(random_move, mm_move, args_2=tuple({4}), n_matches=50)
-    boards_ra, moves_ra = auto_rematch(random_move, random_move, n_matches=500)
+    boards, moves = auto_rematch(random_move, mlp_move, args_1=tuple({True}), n_matches=2000)
 
-    boards_mm.extend(boards_ra)
-    moves_mm.extend(moves_ra)
-
-    entries = save_data(boards_mm, moves_mm)
+    entries = save_data(boards, moves, filename='RA_MLP_2000.mat')
 
     print(entries)

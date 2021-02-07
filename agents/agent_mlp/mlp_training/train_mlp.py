@@ -53,42 +53,30 @@ def clean_data(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     Cleaned X and y
     """
 
-    # join X and y
-    D = np.concatenate((X, y[:, np.newaxis]), axis=1)
+    # unique boards and inverse index mapping
+    X_new, idx_inv = np.unique(X, axis=0, return_inverse=True)
 
-    i = 0
-    while i < D.shape[0]:
-        # indices of equal boards
-        eq_mask = np.all(D[:, :-1] == D[i, :-1], axis=1)
+    # init new y
+    y_new = np.zeros((X.shape[0],), dtype=np.int8)
+    for i in range(y_new.shape[0]):
+        # moves corresponding to unique boards
+        y_to_unique_entry = y[idx_inv == i]
+        # frequency of moves
+        columns, counts = np.unique(y_to_unique_entry, return_counts=True)
+        # most frequent move
+        y_new[i] = columns[np.argmax(counts)].astype(np.int8)
 
-        if eq_mask.sum() > 1:
-            # labels of equal boards
-            y_tmp = D[:, -1][eq_mask]
-
-            # most frequently played column
-            columns, counts = np.unique(y_tmp, return_counts=True)
-            mp_col = columns[np.argmax(counts)].astype(np.int8)
-
-            # set labels of equal boards to most played column
-            D[eq_mask, -1] = mp_col
-
-        i += 1
-
-    # remove duplicates
-    D = np.unique(D, axis=0)
-
-    # split into X and y
-    return D[:, :-1], D[:, -1]
+    return X_new, y_new
 
 
 if __name__ == '__main__':
     MODEL_PATH = 'c4_mlp_model.pkl'
-    INIT_DATASET = 'data/10_MLP_RA_init.mat'
+    INIT_DATASET = 'data/2_MLP_RA_init.mat'
     DATASET = 'MLP_RA.mat'
     DATA_FOLDER = 'data/'
     MODELS_FOLDER = 'models/'
-    N_MATCHES = 3000
-    N_ITER = 4
+    N_MATCHES = 10000
+    N_ITER = 3
 
     # create folders if not already existing
     if not os.path.exists(DATA_FOLDER):
