@@ -57,7 +57,7 @@ def clean_data(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     X_new, idx_inv = np.unique(X, axis=0, return_inverse=True)
 
     # init new y
-    y_new = np.zeros((X.shape[0],), dtype=np.int8)
+    y_new = np.zeros((X_new.shape[0],), dtype=np.int8)
     for i in range(y_new.shape[0]):
         # moves corresponding to unique boards
         y_to_unique_entry = y[idx_inv == i]
@@ -69,14 +69,42 @@ def clean_data(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return X_new, y_new
 
 
+def insert_flipped_boards(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Inserts flipped boards and moves to dataset.
+
+    Parameters
+    ----------
+    X : np.ndarray
+        Data in shape(n_samples, n_features)
+    y : np.ndarray
+        Labels in shape(n_samples, )
+
+    Returns
+    -------
+    Extended X and y
+    """
+
+    def flip_move(move):
+        return move - 2 * (move - 3)
+
+    def flip_board(board):
+        return np.flip(board.reshape(board.shape[0], 6, 7), axis=2).flatten()
+
+    y_flipped = flip_move(y)
+    X_flipped = flip_board(X).reshape(X.shape[0], 42)
+
+    return np.concatenate((X, X_flipped), axis=0), np.concatenate((y, y_flipped), axis=0)
+
+
 if __name__ == '__main__':
     MODEL_PATH = 'c4_mlp_model.pkl'
-    INIT_DATASET = 'data/2_MLP_RA_init.mat'
+    INIT_DATASET = 'data/10_MLP_RA_init.mat'
     DATASET = 'MLP_RA.mat'
     DATA_FOLDER = 'data/'
     MODELS_FOLDER = 'models/'
-    N_MATCHES = 10000
-    N_ITER = 3
+    N_MATCHES = 3000
+    N_ITER = 10
 
     # create folders if not already existing
     if not os.path.exists(DATA_FOLDER):
@@ -102,7 +130,8 @@ if __name__ == '__main__':
         data = scipy.io.loadmat(INIT_DATASET)
         X, y = data['data'], data['labels'][0, :]
 
-    # clean, encode, split
+    # insert flipped boards, clean, encode, split
+    X, y = insert_flipped_boards(X, y)
     X, y = clean_data(X, y)
     X = OneHotEncoder(categories=[[-1, 0, 1]] * 42).fit_transform(X).toarray().astype(np.int8)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, stratify=y)
@@ -133,7 +162,8 @@ if __name__ == '__main__':
         data = scipy.io.loadmat(DATA_FOLDER + str(i+1) + '_' + DATASET)
         X, y = data['data'], data['labels'][0, :]
 
-        # clean, encode, split
+        # insert flipped boards, clean, encode, split
+        X, y = insert_flipped_boards(X, y)
         X, y = clean_data(X, y)
         X = OneHotEncoder(categories=[[-1, 0, 1]] * 42).fit_transform(X).toarray().astype(np.int8)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, stratify=y)
