@@ -1,9 +1,9 @@
+from typing import Tuple, Optional
+
 import numpy as np
+
 from ..common import BoardPiece, SavedState, PlayerAction, PLAYER1, PLAYER2, check_end_state, GameState, \
     get_non_full_columns, apply_player_action
-from typing import Tuple, Optional
-from scipy.signal import convolve2d
-import re
 
 Depth = np.int8  # data type of depth integer
 MIN_VALUE = np.iinfo(np.int32).min
@@ -302,12 +302,40 @@ def feature_score(board: np.ndarray) -> np.int32:
     if check_end_state(board, PLAYER2) == GameState.IS_WIN:
         return MIN_VALUE
 
-    player1_board = np.where(board == 2, -1, board)
-    feature21 = np.array([[0, 1, 1, 1, 0]]).astype(BoardPiece)
-    res = convolve2d(player1_board, feature21, mode='full')
-    if np.any(res == 3):
-        return MAX_VALUE
-    elif np.any(res == -3):
-        return MIN_VALUE
+    masked_board = np.where(board == 2, -1, board)
+    feat2_row_player1 = np.array([0, 1, 1, 1, 0])
+    feat2_row_player2 = np.array([0, -1, -1, -1, 0])
+    # split board into rows and columns
+    rows = np.vsplit(masked_board, 6)
+    cols = np.hsplit(masked_board, 7)
 
-    return -1
+    # check for three in a row with a gap on both sides - certain win
+    for i in range(6):
+        # get indices of columns with a player 1 piece in them
+        idx_player1 = np.where(rows[i][0] == 1)[0]
+        idx_player2 = np.where(rows[i][0] == -1)[0]
+        if len(idx_player1) == 0:
+            continue
+        else:
+            for j, k in zip(idx_player1, idx_player2):
+                # splice row at given index, and row below
+                check_player1 = rows[i][0][j-1:j+4]
+                check_below_player1 = rows[i+1][0][j-1:j+4]
+                check_player2 = rows[i][0][k-1:k+4]
+                check_below_player2 = rows[i + 1][0][k - 1:k + 4]
+                if np.array_equal(check_player1, feat2_row_player1):
+                    # check edge case: because of identical gaps in the row below, piece will not form connect four
+                    # if played
+                    if check_below_player1[0] == 0 or check_below_player1[-1] == 0:
+                        return np.int32(0)
+                    else:
+                        return MAX_VALUE
+                if np.array_equal(check_player2, feat2_row_player2):
+                    # check edge case
+                    if np.array_equal(check_below_player2, feat2_row_player1) or np.array_equal(check_player1,
+                                                                                                feat2_row_player2):
+                        return np.int32(0)
+                    else:
+                        return MAX_VALUE
+
+    return np.int32(-1)
