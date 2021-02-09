@@ -3,10 +3,13 @@ from typing import Optional, Tuple
 import numpy as np
 from sklearn.neural_network import MLPClassifier
 
-from agents.common import BoardPiece, SavedState, PlayerAction, get_non_full_columns, PLAYER2, PLAYER1
+from agents.common import BoardPiece, SavedState, PlayerAction, get_non_full_columns, PLAYER2, PLAYER1, \
+    initialize_game_state
 
 from sklearn.preprocessing import OneHotEncoder
 
+
+ohe = OneHotEncoder(categories=[[-1, 0, 1]] * 42).fit(initialize_game_state().flatten().reshape(1, -1))
 
 def generate_move_mlp(
         board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState], mlp: MLPClassifier
@@ -43,8 +46,7 @@ def generate_move_mlp(
     board = board.flatten().reshape(1, -1)
 
     # one hot encoding
-    ohe = OneHotEncoder(categories=[[-1, 0, 1]] * 42)
-    board = ohe.fit_transform(board).toarray()
+    board = ohe.transform(board).toarray()
 
     # predict probabilities
     probs = mlp.predict_proba(board)[0, :]
