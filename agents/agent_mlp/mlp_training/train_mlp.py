@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Tuple
 
 import joblib
@@ -99,12 +100,14 @@ def insert_flipped_boards(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.
 
 if __name__ == '__main__':
     MODEL_PATH = 'c4_mlp_model.pkl'
-    INIT_DATASET = 'data/10_MLP_RA_init.mat'
+    INIT_DATASET ='' #'data/5_MLP_RA.mat'
     DATASET = 'MLP_RA.mat'
     DATA_FOLDER = 'data/'
     MODELS_FOLDER = 'models/'
-    N_MATCHES = 3000
-    N_ITER = 10
+    N_MATCHES = 1000
+    N_ITER = 5
+
+    t00 = time.time()
 
     # create folders if not already existing
     if not os.path.exists(DATA_FOLDER):
@@ -117,16 +120,22 @@ if __name__ == '__main__':
     if INIT_DATASET == '' or INIT_DATASET is None:
         # generate init data
         print('Generating init Data...')
-        boards, moves = auto_rematch(random_move, random_move, args_1=tuple({True}), args_2=tuple({True}), n_matches=N_MATCHES)
+        t0 = time.time()
+        boards, moves, _ = auto_rematch(random_move, random_move, args_1=tuple({True}), args_2=tuple({True}),
+                                        n_matches=N_MATCHES, sa_ratio=0.1)
         save_data(boards, moves, filename=DATA_FOLDER + '0_' + DATASET)
+        td = time.time()
+        print(f'\t\t\t\t\t{((td - t0) // 60):.0f} min {((td - t0) % 60):.1f} sec')
 
         # prepare data
         print('Preparing Data...')
+        t0 = time.time()
         data = scipy.io.loadmat(DATA_FOLDER + '0_' + DATASET)
         X, y = data['data'], data['labels'][0, :]
     else:
         # load init dataset
         print(f'Preparing Data {INIT_DATASET}...')
+        t0 = time.time()
         data = scipy.io.loadmat(INIT_DATASET)
         X, y = data['data'], data['labels'][0, :]
 
@@ -135,12 +144,16 @@ if __name__ == '__main__':
     X, y = clean_data(X, y)
     X = OneHotEncoder(categories=[[-1, 0, 1]] * 42).fit_transform(X).toarray().astype(np.int8)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, stratify=y)
+    td = time.time()
+    print(f'\t\t\t\t\t{((td - t0) // 60):.0f} min {((td - t0) % 60):.1f} sec')
 
     # train on data
     print('Training MLP...')
+    t0 = time.time()
     mlp = get_mlp()
     mlp.fit(X_train, y_train)
-
+    td = time.time()
+    print(f'\t\t\t\t\t{((td - t0) // 60):.0f} min {((td - t0) % 60):.1f} sec')
     print('MLP score (Train):', mlp.score(X_train, y_train))
     print('MLP score (Test): ', mlp.score(X_test, y_test))
 
@@ -154,11 +167,16 @@ if __name__ == '__main__':
 
         # generate data (random vs mlp)
         print('Generating Data...')
-        boards, moves = auto_rematch(mlp_move, random_move, args_1=tuple({mlp}), args_2=tuple({True}), n_matches=N_MATCHES + (i*100))
+        t0 = time.time()
+        boards, moves, _ = auto_rematch(mlp_move, random_move, args_1=tuple({mlp}), args_2=tuple({True}),
+                                        n_matches=N_MATCHES, sa_ratio=0.1)
         save_data(boards, moves, filename=DATA_FOLDER + str(i+1) + '_' + DATASET)
+        td = time.time()
+        print(f'\t\t\t\t\t{((td - t0) // 60):.0f} min {((td - t0) % 60):.1f} sec')
 
         # prepare data
         print('Preparing Data...')
+        t0 = time.time()
         data = scipy.io.loadmat(DATA_FOLDER + str(i+1) + '_' + DATASET)
         X, y = data['data'], data['labels'][0, :]
 
@@ -167,16 +185,21 @@ if __name__ == '__main__':
         X, y = clean_data(X, y)
         X = OneHotEncoder(categories=[[-1, 0, 1]] * 42).fit_transform(X).toarray().astype(np.int8)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, stratify=y)
+        td = time.time()
+        print(f'\t\t\t\t\t{((td - t0) // 60):.0f} min {((td - t0) % 60):.1f} sec')
 
         # train on data
         print('Training MLP...')
+        t0 = time.time()
         mlp = get_mlp()
         mlp.fit(X_train, y_train)
-
+        td = time.time()
+        print(f'\t\t\t\t\t{((td - t0) // 60):.0f} min {((td - t0) % 60):.1f} sec')
         print('MLP score (Train):', mlp.score(X_train, y_train))
         print('MLP score (Test): ', mlp.score(X_test, y_test))
 
         # save model
         joblib.dump(mlp, MODELS_FOLDER + str(i+1) + '_' + MODEL_PATH)
 
-    print('Finished')
+    tdd = time.time()
+    print(f'\nFinished after {((tdd - t00) // 3600):.0f} h {((tdd - t00) // 60):.0f} min {((tdd - t00) % 60):.1f} sec')
