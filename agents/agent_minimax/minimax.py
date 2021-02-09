@@ -232,7 +232,11 @@ def score(board: np.ndarray) -> np.int32:
 
     """
 
-    if check_end_state(board, PLAYER1) == GameState.STILL_PLAYING:
+    game_state_player1 = check_end_state(board, PLAYER1)
+    game_state_player2 = check_end_state(board, PLAYER2)
+
+    if game_state_player1 == GameState.STILL_PLAYING \
+       and game_state_player2 == GameState.STILL_PLAYING:
         # ongoing game
         player1_score = np.multiply((board == PLAYER1).astype(np.int32), score_matrix).sum()
         player2_score = np.multiply((board == PLAYER2).astype(np.int32), score_matrix).sum()
@@ -240,13 +244,13 @@ def score(board: np.ndarray) -> np.int32:
         return player1_score - player2_score
 
     # check edge cases
-    if check_end_state(board, PLAYER1) == GameState.IS_DRAW:
+    if game_state_player1 == GameState.IS_DRAW:
         return DRAW_VALUE
 
-    if check_end_state(board, PLAYER1) == GameState.IS_WIN:
+    if game_state_player1 == GameState.IS_WIN:
         return MAX_VALUE
 
-    if check_end_state(board, PLAYER2) == GameState.IS_WIN:
+    if game_state_player2 == GameState.IS_WIN:
         return MIN_VALUE
 
     return 0
