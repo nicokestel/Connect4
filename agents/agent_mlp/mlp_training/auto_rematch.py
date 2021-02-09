@@ -1,7 +1,7 @@
 from agents.common import GenMove
 from agents.common import PLAYER1, PLAYER2, GameState
 from agents.common import initialize_game_state, apply_player_action, check_end_state
-from typing import Tuple, List
+from typing import Tuple, List, Optional, Dict
 import numpy as np
 
 
@@ -12,8 +12,9 @@ def auto_rematch(
         player_2: str = "Player 2",
         args_1: tuple = (),
         args_2: tuple = (),
-        n_matches: np.int64 = 1000
-) -> Tuple[List[np.ndarray], List[np.int8]]:
+        n_matches: np.int64 = 1000,
+        sa_ratio: float = -1.0
+) -> Tuple[List[np.ndarray], List[np.int8], Dict[int, int]]:
     """
 
     Parameters
@@ -33,6 +34,8 @@ def auto_rematch(
     n_matches : np.int64
         Number of matches to play (only games with one winner count)
         A match consists of two games with alternating first moving player
+    sa_ratio : np.float32
+        Ratio of games, that the second agent needs to win (measured on minimum number of games)
 
     Returns
     -------
@@ -40,13 +43,29 @@ def auto_rematch(
         Boards of winner's moves
     moves : List[np.int8]
         Winner's moves
+    n_wins : Dict[int, int]
+        Number of won games for each agent
     """
 
-    # boards and moves that get returned after n_matches matches
-    boards = list()
-    moves = list()
+    # two games per match
+    n_games = 2 * n_matches
 
-    for n in range(n_matches):
+    # number of games the agents won
+    a_wins = {PLAYER1: 0, PLAYER2: 0}
+    a_wins_needed = {PLAYER1: (1-sa_ratio) * n_games, PLAYER2: sa_ratio * n_games}
+    # a_wins_left = {PLAYER1: (1-sa_ratio) * n_games, PLAYER2: sa_ratio * n_games}
+
+    # boards and moves that get returned after n_matches matches
+    boards, moves = list(), list()
+    # winning_boards = {PLAYER1: list(), PLAYER2: list()}
+    # winning_moves = {PLAYER1: list(), PLAYER2: list()}
+
+    n = 0
+    while n < n_matches:
+        if 0 <= sa_ratio <= 1:
+            if a_wins[PLAYER1] == a_wins_needed[PLAYER1] and a_wins[PLAYER2] == a_wins_needed[PLAYER2]:
+                break
+
         # print('starting match', n+1)
         players = (PLAYER1, PLAYER2)
         for play_first in (1, -1):
@@ -57,8 +76,8 @@ def auto_rematch(
             gen_args = (args_1, args_2)[::play_first]
 
             # initialize tmp boards and moves lists
-            player_boards = {PLAYER1: list(), PLAYER2: list()}
-            player_moves = {PLAYER1: list(), PLAYER2: list()}
+            tmp_boards = {PLAYER1: list(), PLAYER2: list()}
+            tmp_moves = {PLAYER1: list(), PLAYER2: list()}
 
             playing = True
             while playing:
@@ -75,8 +94,8 @@ def auto_rematch(
                     tmp_board[tmp_board == player] = 1
 
                     # store tmp boards and moves
-                    player_boards[player].append(tmp_board.flatten().astype(np.int8))
-                    player_moves[player].append(action)
+                    tmp_boards[player].append(tmp_board.flatten().astype(np.int8))
+                    tmp_moves[player].append(action)
 
                     apply_player_action(board, action, player)
 
@@ -86,17 +105,29 @@ def auto_rematch(
                             # draw's do not count
                             # start new game
                             # reset boards and moves
-                            player_boards = {PLAYER1: list(), PLAYER2: list()}
-                            player_moves = {PLAYER1: list(), PLAYER2: list()}
                             board = initialize_game_state()
                             break
                         else:
-                            # append boards to boards list
-                            # append moves to moves list
-                            boards.extend(player_boards[player])
-                            moves.extend(player_moves[player])
-                            pass
+                            # if valid second agent win ratio is given
+                            if 0 <= sa_ratio <= 1:
+                                # if agent still needs to win games
+                                if a_wins[player] < a_wins_needed[player]:
+                                    boards.extend(tmp_boards[player])
+                                    moves.extend(tmp_moves[player])
+
+                                    # increment wins the agent needs to achieve
+                                    a_wins[player] += 1
+                                else:
+                                    n -= 1
+                            else:
+                                boards.extend(tmp_boards[player])
+                                moves.extend(tmp_moves[player])
+                                # increment wins the agent needs to achieve
+                                a_wins[player] += 1
+
                         playing = False
                         break
 
-    return boards, moves
+        n += 1
+
+    return boards, moves, a_wins

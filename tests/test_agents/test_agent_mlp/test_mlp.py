@@ -1,20 +1,20 @@
-import numpy as np
-from agents.agent_random import generate_move as random_move
-from agents.agent_minimax import generate_move as minimax_move
-from agents.common import pretty_print_board
+def test_generate_move_mlp():
+    from agents.common import PlayerAction, PLAYER2, string_to_board
+    from agents.agent_mlp import generate_move
+    import joblib
 
-def test_auto_rematch():
-    from agents.agent_mlp.mlp_training.auto_rematch import auto_rematch
-    boards, moves = auto_rematch(random_move, random_move)
+    mlp = joblib.load('0_c4_mlp_model.pkl')
 
-    assert type(boards) == list and type(moves) == list
-    assert len(boards) != 0 and len(moves) != 0
-    assert len(boards) == len(moves)
-    for board in boards:
-        for elem in board:
-            assert elem in [-1, 1, 0]
+    board_end = "|==============|\n" \
+                "|O O O X O O   |\n" \
+                "|X X X O X X X |\n" \
+                "|O O X X X O X |\n" \
+                "|X X O O X X O |\n" \
+                "|O O X X O O X |\n" \
+                "|O O X X O X O |\n" \
+                "|==============|\n" \
+                "|0 1 2 3 4 5 6 |"
+    gen_move = generate_move(board=string_to_board(board_end), player=PLAYER2, mlp=mlp, saved_state=None)[0]
 
-    # print for debugging
-    #for board in boards:
-    #    print(pretty_print_board(board))
-    #    print("--------------")
+    assert isinstance(gen_move, PlayerAction)
+    assert gen_move == 6
