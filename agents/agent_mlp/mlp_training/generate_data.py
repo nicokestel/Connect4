@@ -29,9 +29,21 @@ if __name__ == '__main__':
     from agents.agent_minimax import generate_move as mm_move
     from agents.agent_random import generate_move as random_move
     from agents.agent_mlp import generate_move as mlp_move
+    import time
 
-    boards, moves = auto_rematch(random_move, mlp_move, args_1=tuple({True}), n_matches=2000)
+    import joblib
 
-    entries = save_data(boards, moves, filename='RA_MLP_2000.mat')
+    mlp = joblib.load('models/tmp_model.pkl')
+
+    t0 = time.time()
+    boards, moves, a_wins = auto_rematch(random_move, random_move, args_2=tuple({True}), args_1=tuple({True}),
+                                         n_matches=100)
+
+    print(a_wins)
+
+    td = time.time()
+    print(f'{((td - t0) // 60):.0f} min {((td - t0) % 60):.1f} sec')
+
+    entries = save_data(boards, moves, filename='TMP.mat')
 
     print(entries)
