@@ -302,40 +302,149 @@ def feature_score(board: np.ndarray) -> np.int32:
     if check_end_state(board, PLAYER2) == GameState.IS_WIN:
         return MIN_VALUE
 
+    # mask and split board into rows and columns
     masked_board = np.where(board == 2, -1, board)
-    feat2_row_player1 = np.array([0, 1, 1, 1, 0])
-    feat2_row_player2 = np.array([0, -1, -1, -1, 0])
-    # split board into rows and columns
     rows = np.vsplit(masked_board, 6)
     cols = np.hsplit(masked_board, 7)
 
-    # check for three in a row with a gap on both sides - certain win
+    # feature 2.1 - check for three in a row with a gap on both sides - certain win
+    feat21_row_player1 = np.array([0, 1, 1, 1, 0])
+    feat21_row_player2 = np.array([0, -1, -1, -1, 0])
+
+    # loop over rows of board
     for i in range(6):
-        # get indices of columns with a player 1 piece in them
-        idx_player1 = np.where(rows[i][0] == 1)[0]
-        idx_player2 = np.where(rows[i][0] == -1)[0]
-        if len(idx_player1) == 0:
+        # get indices of where player pieces are in each row
+        idx_row_player1 = np.where(rows[i][0] == 1)[0]
+        idx_row_player2 = np.where(rows[i][0] == -1)[0]
+        if len(idx_row_player1) == 0:
             continue
         else:
-            for j, k in zip(idx_player1, idx_player2):
-                # splice row at given index, and row below
-                check_player1 = rows[i][0][j-1:j+4]
-                check_below_player1 = rows[i+1][0][j-1:j+4]
-                check_player2 = rows[i][0][k-1:k+4]
-                check_below_player2 = rows[i + 1][0][k - 1:k + 4]
-                if np.array_equal(check_player1, feat2_row_player1):
-                    # check edge case: because of identical gaps in the row below, piece will not form connect four
-                    # if played
-                    if check_below_player1[0] == 0 or check_below_player1[-1] == 0:
-                        return np.int32(0)
-                    else:
-                        return MAX_VALUE
-                if np.array_equal(check_player2, feat2_row_player2):
-                    # check edge case
-                    if np.array_equal(check_below_player2, feat2_row_player1) or np.array_equal(check_player1,
-                                                                                                feat2_row_player2):
-                        return np.int32(0)
-                    else:
-                        return MAX_VALUE
+            for j, k in zip(idx_row_player1, idx_row_player2):
+                # splice row at given index, and row below, for both players
+                check_player1 = rows[i][0][j - 1:j + 4]
+                check_player2 = rows[i][0][k - 1:k + 4]
+                if i == 5:
+                    check_below_player1 = [3]  # 3 as a dummy value for "below" last row of the board
+                    check_below_player2 = [3]
+                else:
+                    check_below_player1 = rows[i + 1][0][j - 1:j + 4]
+                    check_below_player2 = rows[i + 1][0][k - 1:k + 4]
 
-    return np.int32(-1)
+                # check if feature exists for player 1
+                if np.array_equal(check_player1, feat21_row_player1):
+                    # check edge case: because of identical gaps in the row below, piece will not form connected four
+                    # if played
+                    if check_below_player1[0] == 0 and check_below_player1[-1] == 0:
+                        continue
+                    else:
+                        return MAX_VALUE
+                # check if feature exists for player 2
+                if np.array_equal(check_player2, feat21_row_player2):
+                    # check edge case
+                    if check_below_player2[0] == 0 and check_below_player2[-1] == 0:
+                        continue
+                    else:
+                        return MIN_VALUE
+
+    # initialize heuristic value
+    heuristic_value = np.int32(0)
+
+    # feature 2.2 - check for row of 3 pieces with a gap of one, or column of 3 with a gap above
+    feat22_row1_player1 = np.array([0, 1, 1, 1])
+    feat22_row2_player1 = np.array([1, 0, 1, 1])
+    feat22_row3_player1 = np.array([1, 1, 0, 1])
+    feat22_row4_player1 = np.array([1, 1, 1, 0])
+    feat22_row1_player2 = np.array([0, -1, -1, -1])
+    feat22_row2_player2 = np.array([-1, 0, -1, -1])
+    feat22_row3_player2 = np.array([-1, -1, 0, -1])
+    feat22_row4_player2 = np.array([-1, -1, -1, 0])
+
+    # loop over rows in the board
+    for i in range(6):
+        # get rows with player pieces in them
+        idx_row_player1 = np.where(rows[i][0] == 1)[0]
+        idx_row_player2 = np.where(rows[i][0] == -1)[0]
+
+        for j, k in zip(idx_row_player1, idx_row_player2):  # j - player 1 index, k - player 2 index
+            # splice row at the index to an array of length matching the feature we want to check (for each player)
+            check_feat221_player1 = rows[i][0][j - 1:j + 3]
+            check_feat222_player1 = rows[i][0][j:j + 4]
+
+            check_feat221_player2 = rows[i][0][k - 1:k + 3]
+            check_feat222_player2 = rows[i][0][k:k + 4]
+
+            if i == 5:  # dummy value for the row below if we are checking the last row
+                check_below_row1_player1 = [3, 3, 3, 3]
+                check_below_row2_player1 = [3, 3, 3, 3]
+            else:
+                check_below_row1_player1 = rows[i+1][0][j - 1:j + 3]
+                check_below_row2_player2 = rows[i+1][0][j:j + 4]
+
+            # check if feature 2.1 exists for each player
+            if np.array_equal(feat22_row1_player1, check_feat221_player1):
+                if check_below_row1_player1[0] == 0:
+                    pass
+                else:
+                    heuristic_value += 900000
+
+            if np.array_equal(feat22_row1_player2, check_feat221_player2):
+                if check_below_row1_player1[0] == 0:
+                    pass
+                else:
+                    heuristic_value -= 900000
+
+            if np.array_equal(feat22_row2_player1, check_feat222_player1):
+                if check_below_row2_player1[1] == 0:
+                    pass
+                else:
+                    heuristic_value += 900000
+            if np.array_equal(feat22_row2_player2, check_feat222_player2):
+                if check_below_row2_player2[1] == 0:
+                    pass
+                else:
+                    heuristic_value -= 900000
+            if np.array_equal(feat22_row3_player1, check_feat222_player1):
+                if check_below_row2_player1[1] == 0:
+                    pass
+                else:
+                    heuristic_value += 900000
+            if np.array_equal(feat22_row3_player2, check_feat222_player2):
+                if check_below_row2_player2[1] == 0:
+                    pass
+                else:
+                    heuristic_value -= 900000
+            if np.array_equal(feat22_row4_player1, check_feat222_player1):
+                if check_below_row2_player1[1] == 0:
+                    pass
+                else:
+                    heuristic_value += 900000
+            if np.array_equal(feat22_row4_player2, check_feat222_player2):
+                if check_below_row2_player1[1] == 0:
+                    pass
+                else:
+                    heuristic_value -= 900000
+
+    # feature 2 - three in a row, vertical
+    feat22_col_player1 = feat22_row1_player1.reshape(4, 1)
+    feat22_col_player2 = feat22_row1_player2.reshape(4, 1)
+
+    # loop over columns of board
+    for i in range(7):
+        # get columns with pieces played
+        idx_col_player1 = np.where(cols[i] == 1)[0]
+        idx_col_player2 = np.where(cols[i] == -1)[0]
+
+        # loop through columns, searching player 1 pieces
+        for j in idx_col_player1:
+            if j > 3:  # vertical column of length four only possible at depth 4 or higher in board
+                check_col_player1 = cols[i][j-3:j+1]
+                if np.array_equal(feat22_col_player1, check_col_player1):
+                    heuristic_value += 900000
+        # loop through columns, searching for player 2 pieces
+        for k in idx_col_player2:
+            if k > 3:
+                check_col_player2 = cols[i][k - 3:k + 1]
+                if np.array_equal(feat22_col_player2, check_col_player2):
+                    heuristic_value -= 900000
+
+    return heuristic_value
