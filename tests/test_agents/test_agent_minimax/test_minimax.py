@@ -133,8 +133,10 @@ def test_feature_score_1():
              "|0 1 2 3 4 5 6 |"
     board1_flip = board1.replace('X', 'T').replace('O', 'X').replace('T', 'O')
     b1 = string_to_board(board1)
+    b1 = np.flipud(b1)
     assert feature_score(board=b1) == MAX_VALUE
     b1_flip = string_to_board(board1_flip)
+    b1_flip = np.flipud(b1_flip)
     assert feature_score(board=b1_flip) == MIN_VALUE
 
 
@@ -149,10 +151,10 @@ def test_feature_score_2():
              "|O   X X X   O |\n" \
              "|==============|\n" \
              "|0 1 2 3 4 5 6 |"
-    b2 = string_to_board(board2)
+    b2 = np.flipud(string_to_board(board2))
     assert feature_score(board=b2) == MAX_VALUE
     board2_flip = board2.replace('X', 'T').replace('O', 'X').replace('T', 'O')
-    b2_flip = string_to_board(board2_flip)
+    b2_flip = np.flipud(string_to_board(board2_flip))
     assert feature_score(board=b2_flip) == MIN_VALUE
 
     # feature 2 - one space available to win in one move
@@ -174,8 +176,8 @@ def test_feature_score_2():
               "|X         X O |\n" \
               "|==============|\n" \
               "|0 1 2 3 4 5 6 |"
-    board3 = string_to_board(board3)
-    board32 = string_to_board(board32)
+    board3 = np.flipud(string_to_board(board3))
+    board32 = np.flipud(string_to_board(board32))
     assert feature_score(board=board3) == 900000
     assert feature_score(board=board32) == -900000
 
@@ -191,9 +193,8 @@ def test_feature_score_3():
              "|O X           |\n" \
              "|==============|\n" \
              "|0 1 2 3 4 5 6 |"
-    board7 = string_to_board(board7)
+    board7 = np.flipud(string_to_board(board7))
     assert feature_score(board=board7) == 40000
-
 
     board8 = "|==============|\n" \
              "|              |\n" \
@@ -204,9 +205,8 @@ def test_feature_score_3():
              "|O O X         |\n" \
              "|==============|\n" \
              "|0 1 2 3 4 5 6 |"
-    board8 = string_to_board(board8)
+    board8 = np.flipud(string_to_board(board8))
     assert feature_score(board=board8) == 30000
-
 
     board9 = "|==============|\n" \
              "|              |\n" \
@@ -217,19 +217,19 @@ def test_feature_score_3():
              "|O X X       O |\n" \
              "|==============|\n" \
              "|0 1 2 3 4 5 6 |"
-    board9 = string_to_board(board9)
+    board9 = np.flipud(string_to_board(board9))
     assert feature_score(board=board9) == 20000
 
     board10 = "|==============|\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|O X X     O   |\n" \
-             "|==============|\n" \
-             "|0 1 2 3 4 5 6 |"
-    board10 = string_to_board(board10)
+              "|              |\n" \
+              "|              |\n" \
+              "|              |\n" \
+              "|              |\n" \
+              "|              |\n" \
+              "|O X X     O   |\n" \
+              "|==============|\n" \
+              "|0 1 2 3 4 5 6 |"
+    board10 = np.flipud(string_to_board(board10))
     assert feature_score(board=board10) == 10000
 
 
@@ -243,7 +243,7 @@ def test_feature_score_special():
              "|  O O O X     |\n" \
              "|==============|\n" \
              "|0 1 2 3 4 5 6 |"
-    board5 = string_to_board(board5)
+    board5 = np.flipud(string_to_board(board5))
     assert feature_score(board=board5) == 0
 
     board6 = "|==============|\n" \
@@ -255,8 +255,7 @@ def test_feature_score_special():
              "|O X O X O X O |\n" \
              "|==============|\n" \
              "|0 1 2 3 4 5 6 |"
-    b6 = string_to_board(board6)
-    assert feature_score(board=b6) == 900000
-    board6_lr = pretty_print_board(np.fliplr(string_to_board(board6)))
-    b6_lr = string_to_board(board6_lr)
-    assert feature_score(board=b6_lr) == 900000
+    board6 = np.flipud(string_to_board(board6))
+    assert feature_score(board=board6) == 900000
+    board6_lr = np.fliplr(board6)
+    assert feature_score(board=board6_lr) == 900000
