@@ -154,7 +154,7 @@ def minimax_ab(
     """
 
     if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
-        return PlayerAction(0), score(board=board), saved_state
+        return PlayerAction(0), score(board=board, f_score=True), saved_state
 
     if player == PLAYER1:  # maximizing
         value = a
@@ -213,7 +213,7 @@ score_matrix = np.array([[3, 4, 5, 7, 5, 4, 3],
                          [3, 4, 5, 7, 5, 4, 3]], dtype=np.int32)
 
 
-def score(board: np.ndarray) -> np.int32:
+def score(board: np.ndarray, f_score: bool = False) -> np.int32:
     """
     Scores a board using simple heuristic scoring.
 
@@ -221,7 +221,8 @@ def score(board: np.ndarray) -> np.int32:
     ----------
     board: np.ndarray
         Current game state
-
+    f_score: bool
+        Flag for feature score heuristic. If False, use simple heuristic
     Returns
     -------
     score: np.int32
@@ -243,6 +244,9 @@ def score(board: np.ndarray) -> np.int32:
 
     if check_end_state(board, PLAYER2) == GameState.IS_WIN:
         return MIN_VALUE
+
+    if f_score:
+        return feature_score(board)
 
     # ongoing game
     player1_score = np.multiply((board == PLAYER1).astype(np.int32), score_matrix).sum()
@@ -302,7 +306,7 @@ def feature_score(board: np.ndarray) -> np.int32:
     if check_end_state(board, PLAYER2) == GameState.IS_WIN:
         return MIN_VALUE
 
-    # mask and split board into rows and columns
+    # mask and split board into rows, columns, left and right diagonals
     masked_board = np.where(board == 2, -1, board)
     rows = np.vsplit(masked_board, 6)
     cols = np.hsplit(masked_board, 7)
@@ -315,20 +319,16 @@ def feature_score(board: np.ndarray) -> np.int32:
     for i in range(6):
         # get indices of where player pieces are in each row
         idx_row_player1 = np.where(rows[i][0] == 1)[0]
-        idx_row_player2 = np.where(rows[i][0] == -1)[0]
+
         if len(idx_row_player1) == 0:
             continue
         else:
-            for j, k in zip(idx_row_player1, idx_row_player2):
-                # splice row at given index, and row below, for both players
+            for j in idx_row_player1:
                 check_player1 = rows[i][0][j - 1:j + 4]
-                check_player2 = rows[i][0][k - 1:k + 4]
                 if i == 5:
                     check_below_player1 = [3]  # 3 as a dummy value for "below" last row of the board
-                    check_below_player2 = [3]
                 else:
                     check_below_player1 = rows[i + 1][0][j - 1:j + 4]
-                    check_below_player2 = rows[i + 1][0][k - 1:k + 4]
 
                 # check if feature exists for player 1
                 if np.array_equal(check_player1, feat21_row_player1):
@@ -338,14 +338,24 @@ def feature_score(board: np.ndarray) -> np.int32:
                         continue
                     else:
                         return MAX_VALUE
-                # check if feature exists for player 2
+
+        idx_row_player2 = np.where(rows[i][0] == -1)[0]
+        if len(idx_row_player2) == 0:
+            continue
+        else:
+            for k in idx_row_player2:
+                check_player2 = rows[i][0][k - 1:k + 4]
+                if i == 5:
+                    check_below_player2 = [3]
+                else:
+                    check_below_player2 = rows[i + 1][0][k - 1:k + 4]
+                    # check if feature exists for player 2
                 if np.array_equal(check_player2, feat21_row_player2):
                     # check edge case
                     if check_below_player2[0] == 0 and check_below_player2[-1] == 0:
                         continue
                     else:
                         return MIN_VALUE
-
     # initialize heuristic value
     heuristic_value = np.int32(0)
 
@@ -365,61 +375,81 @@ def feature_score(board: np.ndarray) -> np.int32:
         idx_row_player1 = np.where(rows[i][0] == 1)[0]
         idx_row_player2 = np.where(rows[i][0] == -1)[0]
 
-        for j, k in zip(idx_row_player1, idx_row_player2):  # j - player 1 index, k - player 2 index
-            # splice row at the index to an array of length matching the feature we want to check (for each player)
+        # check features for player 1
+        if len(idx_row_player1) == 0:
+            continue
+        for j in idx_row_player1:
             check_feat221_player1 = rows[i][0][j - 1:j + 3]
             check_feat222_player1 = rows[i][0][j:j + 4]
 
-            check_feat221_player2 = rows[i][0][k - 1:k + 3]
-            check_feat222_player2 = rows[i][0][k:k + 4]
-
-            if i == 5:  # dummy value for the row below if we are checking the last row
+            if i == 5:
                 check_below_row1_player1 = [3, 3, 3, 3]
                 check_below_row2_player1 = [3, 3, 3, 3]
             else:
-                check_below_row1_player1 = rows[i+1][0][j - 1:j + 3]
-                check_below_row2_player2 = rows[i+1][0][j:j + 4]
+                check_below_row1_player1 = rows[i + 1][0][j - 1:j + 3]
+                check_below_row2_player1 = rows[i + 1][0][j:j + 4]
 
-            # check if feature 2.1 exists for each player
             if np.array_equal(feat22_row1_player1, check_feat221_player1):
                 if check_below_row1_player1[0] == 0:
                     pass
                 else:
                     heuristic_value += 900000
 
-            if np.array_equal(feat22_row1_player2, check_feat221_player2):
-                if check_below_row1_player1[0] == 0:
-                    pass
-                else:
-                    heuristic_value -= 900000
-
             if np.array_equal(feat22_row2_player1, check_feat222_player1):
                 if check_below_row2_player1[1] == 0:
                     pass
                 else:
                     heuristic_value += 900000
-            if np.array_equal(feat22_row2_player2, check_feat222_player2):
-                if check_below_row2_player2[1] == 0:
-                    pass
-                else:
-                    heuristic_value -= 900000
+
             if np.array_equal(feat22_row3_player1, check_feat222_player1):
                 if check_below_row2_player1[1] == 0:
                     pass
                 else:
                     heuristic_value += 900000
-            if np.array_equal(feat22_row3_player2, check_feat222_player2):
-                if check_below_row2_player2[1] == 0:
-                    pass
-                else:
-                    heuristic_value -= 900000
+
             if np.array_equal(feat22_row4_player1, check_feat222_player1):
                 if check_below_row2_player1[1] == 0:
                     pass
                 else:
                     heuristic_value += 900000
+
+        # check features for player 2
+        if len(idx_row_player2) == 0:
+            continue
+        for k in idx_row_player2:  # j - player 1 index, k - player 2 index
+            # splice row at the index to an array of length matching the feature we want to check (for each player)
+            check_feat221_player2 = rows[i][0][k - 1:k + 3]
+            check_feat222_player2 = rows[i][0][k:k + 4]
+
+            if i == 5:  # dummy value for the row below if we are checking the last row
+                check_below_row1_player2 = [3, 3, 3, 3]
+                check_below_row2_player2 = [3, 3, 3, 3]
+            else:
+                check_below_row1_player2 = rows[i + 1][0][k - 1:k + 3]
+                check_below_row2_player2 = rows[i + 1][0][k:k + 4]
+
+            # check if feature 2.1 exists for each player
+
+            if np.array_equal(feat22_row1_player2, check_feat221_player2):
+                if check_below_row1_player2[0] == 0:
+                    pass
+                else:
+                    heuristic_value -= 900000
+
+            if np.array_equal(feat22_row2_player2, check_feat222_player2):
+                if check_below_row2_player2[1] == 0:
+                    pass
+                else:
+                    heuristic_value -= 900000
+
+            if np.array_equal(feat22_row3_player2, check_feat222_player2):
+                if check_below_row2_player2[1] == 0:
+                    pass
+                else:
+                    heuristic_value -= 900000
+
             if np.array_equal(feat22_row4_player2, check_feat222_player2):
-                if check_below_row2_player1[1] == 0:
+                if check_below_row2_player2[1] == 0:
                     pass
                 else:
                     heuristic_value -= 900000
