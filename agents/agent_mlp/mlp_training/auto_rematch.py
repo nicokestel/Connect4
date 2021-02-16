@@ -53,12 +53,9 @@ def auto_rematch(
     # number of games the agents won
     a_wins = {PLAYER1: 0, PLAYER2: 0}
     a_wins_needed = {PLAYER1: (1-sa_ratio) * n_games, PLAYER2: sa_ratio * n_games}
-    # a_wins_left = {PLAYER1: (1-sa_ratio) * n_games, PLAYER2: sa_ratio * n_games}
 
     # boards and moves that get returned after n_matches matches
     boards, moves = list(), list()
-    # winning_boards = {PLAYER1: list(), PLAYER2: list()}
-    # winning_moves = {PLAYER1: list(), PLAYER2: list()}
 
     n = 0
     while n < n_matches:
@@ -115,14 +112,14 @@ def auto_rematch(
                                     boards.extend(tmp_boards[player])
                                     moves.extend(tmp_moves[player])
 
-                                    # increment wins the agent needs to achieve
+                                    # increment wins of winning agent
                                     a_wins[player] += 1
                                 else:
                                     n -= 1
                             else:
                                 boards.extend(tmp_boards[player])
                                 moves.extend(tmp_moves[player])
-                                # increment wins the agent needs to achieve
+                                # increment wins of winning agent
                                 a_wins[player] += 1
 
                         playing = False

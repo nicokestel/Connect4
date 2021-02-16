@@ -43,3 +43,27 @@ def test_insert_flipped_boards():
     assert type(ynew[0]) == np.int8
 
     assert len(ynew) == Xnew.shape[0] >= n_entries_org
+
+
+def test_extract_one_to_win():
+    from agents.agent_mlp.mlp_training.train_mlp import extract_one_to_win
+    from agents.common import PLAYER2, PLAYER1, apply_player_action, check_end_state, GameState
+    import scipy.io
+    import numpy as np
+
+    data = scipy.io.loadmat('0_MLP_RA.mat')
+    X, y = data['data'], data['labels'][0, :]
+
+    Xnew, ynew = extract_one_to_win(X, y)
+
+    Xnew[Xnew == -1] = PLAYER2
+
+    X_unique, c_unique = np.unique(Xnew, return_counts=True, axis=0)
+
+    assert X_unique.shape == Xnew.shape
+    assert np.all(c_unique == 1)
+
+    for i in range(Xnew.shape[0]):
+        board = Xnew[i].reshape(6, 7)
+        board = apply_player_action(board, ynew[i], PLAYER1)
+        assert check_end_state(board, PLAYER2) != GameState.IS_WIN
