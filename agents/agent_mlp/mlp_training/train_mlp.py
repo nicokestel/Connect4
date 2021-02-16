@@ -27,7 +27,7 @@ def get_mlp() -> MLPClassifier:
     A Multilayer Perceptron instance
     """
     return MLPClassifier(activation='logistic',
-                         hidden_layer_sizes=(126 * 4),
+                         hidden_layer_sizes=(126 * 5),
                          max_iter=1500,
                          alpha=0.001,
                          n_iter_no_change=10,
@@ -123,13 +123,13 @@ def extract_one_to_win(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.nda
 if __name__ == '__main__':
 
     INIT_MODEL = ''
-    MODEL_PATH = 'INC_FIN.pkl'
-    INIT_DATASET = 'data/BACKUP.mat'  # needs to be sorted in a chronological matter
-    DATASET = 'INC_FIN.mat'
+    MODEL_PATH = 'new_arch.pkl'
+    INIT_DATASET = 'data/6_GROWING.mat'
+    DATASET = 'new_arch.mat'
     DATA_FOLDER = 'data/'
     MODELS_FOLDER = 'models/'
-    N_MATCHES = 5000
-    N_ITER = 3
+    N_MATCHES = 1000
+    N_ITER = 10
     SA_RATIO = -1.0
 
     X, y = None, None
@@ -156,17 +156,18 @@ if __name__ == '__main__':
         print('Preparing Data...')
         t0 = time.time()
         X, y = np.array(boards), np.array(moves)
+
+        # extract final boards, insert flipped boards, clean, encode, split
+        X, y = extract_one_to_win(X, y)
+        X, y = insert_flipped_boards(X, y)
+        X, y = clean_data(X, y)
+
     else:
         # load init dataset
         print(f'Preparing Data {INIT_DATASET}...')
         t0 = time.time()
         data = scipy.io.loadmat(INIT_DATASET)
         X, y = data['data'], data['labels'][0, :]
-
-    # extract final boards, insert flipped boards, clean, encode, split
-    X, y = extract_one_to_win(X, y)
-    X, y = insert_flipped_boards(X, y)
-    X, y = clean_data(X, y)
 
     # save as first growing iteration
     scipy.io.savemat(DATA_FOLDER + '0_GROWING.mat', {'data': X, 'labels': y})
