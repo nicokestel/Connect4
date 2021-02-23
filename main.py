@@ -4,6 +4,7 @@ from agents.common import PlayerAction, BoardPiece, SavedState, GenMove
 
 from agents.agent_random import generate_move as random_move
 from agents.agent_minimax import generate_move as minimax_move
+from agents.agent_mlp import generate_move as mlp_move
 
 
 def user_move(board: np.ndarray, _player: BoardPiece, saved_state: Optional[SavedState]):
@@ -71,5 +72,8 @@ def human_vs_agent(
 
 if __name__ == "__main__":
     # human_vs_agent(user_move)
-    human_vs_agent(random_move, minimax_move, args_2=tuple({6}), player_1='RANDOM', player_2='MINIMAX')
+    # human_vs_agent(random_move, minimax_move, args_2=tuple({6}), player_1='RANDOM', player_2='MINIMAX')
     # human_vs_agent(random_move, random_move, player_1='RANDOM_1', player_2='RANDOM_2')
+    import joblib
+    mlp = joblib.load('agents/agent_mlp/mlp_training/models/2_c4_mlp_model.pkl')
+    human_vs_agent(mlp_move, random_move, player_1='MLP', player_2='RANDN', args_1=tuple({mlp}), args_2=tuple({False}))
