@@ -1,3 +1,4 @@
+import os
 from typing import Optional, Tuple
 
 import numpy as np
@@ -8,11 +9,18 @@ from agents.common import BoardPiece, SavedState, PlayerAction, get_non_full_col
 
 from sklearn.preprocessing import OneHotEncoder
 
+import joblib
+
 
 ohe = OneHotEncoder(categories=[[-1, 0, 1]] * 42).fit(initialize_game_state().flatten().reshape(1, -1))
 
+
+mlp_model_file = os.path.join(os.path.dirname(__file__), 'mlp_training', 'models', 'MLP_MODEL.pkl')
+mlp_default = joblib.load(mlp_model_file)
+
+
 def generate_move_mlp(
-        board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState], mlp: MLPClassifier
+        board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState], mlp: MLPClassifier = mlp_default
 ) -> Tuple[PlayerAction, Optional[SavedState]]:
     """
     Return move determined by MLP.
