@@ -120,7 +120,7 @@ from agents.common import string_to_board, pretty_print_board, PLAYER1, PLAYER2
 import numpy as np
 
 
-def test_feature_score_1():
+def test_feature_score():
     # feature 1 - certain win
     board1 = "|==============|\n" \
              "|              |\n" \
@@ -139,8 +139,6 @@ def test_feature_score_1():
     b1_flip = np.flipud(b1_flip)
     assert feature_score(board=b1_flip) == MIN_VALUE
 
-
-def test_feature_score_2():
     # feature 2 - two spaces available to win in one move
     board2 = "|==============|\n" \
              "|              |\n" \
@@ -181,81 +179,3 @@ def test_feature_score_2():
     assert feature_score(board=board3) == 900000
     assert feature_score(board=board32) == -900000
 
-
-def test_feature_score_3():
-    # feature 3
-    board7 = "|==============|\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|O             |\n" \
-             "|X             |\n" \
-             "|O X           |\n" \
-             "|==============|\n" \
-             "|0 1 2 3 4 5 6 |"
-    board7 = np.flipud(string_to_board(board7))
-    assert feature_score(board=board7) == 40000
-
-    board8 = "|==============|\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|X             |\n" \
-             "|O O X         |\n" \
-             "|==============|\n" \
-             "|0 1 2 3 4 5 6 |"
-    board8 = np.flipud(string_to_board(board8))
-    assert feature_score(board=board8) == 30000
-
-    board9 = "|==============|\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|O X X       O |\n" \
-             "|==============|\n" \
-             "|0 1 2 3 4 5 6 |"
-    board9 = np.flipud(string_to_board(board9))
-    assert feature_score(board=board9) == 20000
-
-    board10 = "|==============|\n" \
-              "|              |\n" \
-              "|              |\n" \
-              "|              |\n" \
-              "|              |\n" \
-              "|              |\n" \
-              "|O X X     O   |\n" \
-              "|==============|\n" \
-              "|0 1 2 3 4 5 6 |"
-    board10 = np.flipud(string_to_board(board10))
-    assert feature_score(board=board10) == 10000
-
-
-def test_feature_score_special():
-    board5 = "|==============|\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|  X X X O     |\n" \
-             "|  O O O X     |\n" \
-             "|==============|\n" \
-             "|0 1 2 3 4 5 6 |"
-    board5 = np.flipud(string_to_board(board5))
-    assert feature_score(board=board5) == 0
-
-    board6 = "|==============|\n" \
-             "|              |\n" \
-             "|              |\n" \
-             "|        X     |\n" \
-             "|        X     |\n" \
-             "|    X   O   O |\n" \
-             "|O X O X O X O |\n" \
-             "|==============|\n" \
-             "|0 1 2 3 4 5 6 |"
-    board6 = np.flipud(string_to_board(board6))
-    assert feature_score(board=board6) == 900000
-    board6_lr = np.fliplr(board6)
-    assert feature_score(board=board6_lr) == 900000
