@@ -12,7 +12,7 @@ DRAW_VALUE = np.int32(0)
 
 def generate_move_minimax(
         board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState], depth: Depth = Depth(4),
-        use_ab_pruning: bool = True
+        use_ab_pruning: bool = True, use_fscore: bool = False
 ) -> Tuple[PlayerAction, Optional[SavedState]]:
     """
 
@@ -28,6 +28,8 @@ def generate_move_minimax(
         Indicates up to which depth moves should be predicted. (default = 4)
     use_ab_pruning: bool
         Flag that indicates if alphabeta-pruning should be used
+    use_fscore : bool
+        Flag that indicates if feature-based heuristic should be used
 
     Returns
     -------
@@ -39,13 +41,13 @@ def generate_move_minimax(
     """
 
     if use_ab_pruning:
-        return tuple(np.array(minimax_ab(board=board, player=player, depth=depth, saved_state=saved_state))[[0, 2]])
+        return tuple(np.array(minimax_ab(board=board, player=player, depth=depth, saved_state=saved_state, f_score=use_fscore))[[0, 2]])
 
-    return tuple(np.array(minimax(board=board, player=player, depth=depth, saved_state=saved_state))[[0, 2]])
+    return tuple(np.array(minimax(board=board, player=player, depth=depth, saved_state=saved_state, f_score=use_fscore))[[0, 2]])
 
 
 def minimax(
-        board: np.ndarray, player: BoardPiece, depth: np.int8, saved_state: Optional[SavedState]
+        board: np.ndarray, player: BoardPiece, depth: np.int8, saved_state: Optional[SavedState], f_score: bool = False,
 ) -> Tuple[PlayerAction, np.int32, Optional[SavedState]]:
     """
     Executes Minimax Algorithm from player's perspective by predicting depth next turns starting with board.
@@ -61,7 +63,8 @@ def minimax(
         Depth counter to indicate how many turns are left to predict (stopping at 0)
     saved_state: Optional[SavedState]
         ???
-
+    f_score: bool
+        Flag that indicates if feature-based heuristic should be used
 
     Returns
     -------
@@ -75,7 +78,7 @@ def minimax(
     """
 
     if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
-        return PlayerAction(0), score(board=board), saved_state
+        return PlayerAction(0), score(board=board, f_score=f_score), saved_state
 
     if player == PLAYER1:  # maximizing
         value = np.iinfo(np.int32).min
@@ -118,7 +121,7 @@ def minimax(
 
 def minimax_ab(
         board: np.ndarray, player: BoardPiece, depth: np.int8, saved_state: Optional[SavedState],
-        a: np.int32 = MIN_VALUE, b: np.int32 = MAX_VALUE
+        a: np.int32 = MIN_VALUE, b: np.int32 = MAX_VALUE, f_score: bool = False
 ) -> Tuple[PlayerAction, np.int32, Optional[SavedState]]:
     """
     Executes Minimax Algorithm with alphabeta-pruning from player's perspective by predicting depth next turns
@@ -139,6 +142,8 @@ def minimax_ab(
         Beta value used for beta-cutoffs
     saved_state: Optional[SavedState]
         ???
+    f_score: bool
+        Flag that indicates if feature-based heuristic should be used
 
 
     Returns
@@ -153,7 +158,7 @@ def minimax_ab(
     """
 
     if depth == 0 or not check_end_state(board=board, player=player) == GameState.STILL_PLAYING:
-        return PlayerAction(0), score(board=board, f_score=True), saved_state
+        return PlayerAction(0), score(board=board, f_score=f_score), saved_state
 
     if player == PLAYER1:  # maximizing
         value = a

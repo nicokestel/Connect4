@@ -28,6 +28,15 @@ def test_minimax():
     assert minimax_ab(board=board_init, player=PLAYER1, depth=Depth(4), a=MIN_VALUE, b=MAX_VALUE, saved_state=None)[
                0] == PlayerAction(3)
 
+    # feature-based heuristic
+    assert minimax(board=board_init, player=PLAYER1, depth=Depth(4), saved_state=None, f_score=True)[0] == PlayerAction(3)
+    assert minimax_ab(board=board_init, player=PLAYER1, depth=Depth(4), a=MIN_VALUE, b=MAX_VALUE, saved_state=None,
+                      f_score=True)[0] == PlayerAction(3)
+
+    assert minimax(board=string_to_board(board_xwin), player=PLAYER1, depth=Depth(4), saved_state=None, f_score=True)[0] == PlayerAction(3)
+    assert minimax_ab(board=string_to_board(board_xwin), player=PLAYER1, depth=Depth(4), a=MIN_VALUE, b=MAX_VALUE, saved_state=None,
+                      f_score=True)[0] == PlayerAction(3)
+
     # PLAYER1 plays 3 to win, PLAYER2 needs to prevent that
     assert minimax(board=string_to_board(board_xwin), player=PLAYER1, depth=Depth(2), saved_state=None)[
                0] == PlayerAction(3)
