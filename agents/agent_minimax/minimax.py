@@ -282,7 +282,8 @@ def sort_moves(moves: Tuple[PlayerAction]) -> Tuple[PlayerAction]:
 
 def feature_score(board: np.ndarray) -> np.int32:
     """
-    Scores a board by looking for features.
+    Scores a board by looking for features indicating strong winning scenarios e.g. vertical and
+    horizontal permutations of three player pieces with one or two gaps to play in.
 
     Parameters
     ----------
@@ -301,7 +302,7 @@ def feature_score(board: np.ndarray) -> np.int32:
 
     """
 
-    # check edge cases
+    # feature 1 - check win or draw cases
     if check_end_state(board, PLAYER1) == GameState.IS_DRAW:
         return DRAW_VALUE
 
@@ -311,7 +312,7 @@ def feature_score(board: np.ndarray) -> np.int32:
     if check_end_state(board, PLAYER2) == GameState.IS_WIN:
         return MIN_VALUE
 
-    # mask and split board into rows, columns, left and right diagonals
+    # mask and split board into rows, columns
     masked_board = np.where(board == 2, -1, board)
     rows = np.vsplit(masked_board, 6)
     cols = np.hsplit(masked_board, 7)
@@ -361,6 +362,7 @@ def feature_score(board: np.ndarray) -> np.int32:
                         continue
                     else:
                         return MIN_VALUE
+
     # initialize heuristic value
     heuristic_value = np.int32(0)
 
@@ -388,6 +390,7 @@ def feature_score(board: np.ndarray) -> np.int32:
             check_feat222_player1 = rows[i][0][j:j + 4]
 
             if i == 5:
+                # dummy value for the row "below" last row of the board
                 check_below_row1_player1 = [3, 3, 3, 3]
                 check_below_row2_player1 = [3, 3, 3, 3]
             else:
